@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DK FASHION - Thời Trang Thể Thao Cao Cấp</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --adidas-black: #000000;
+            --adidas-white: #ffffff;
+            --adidas-gray: #767677;
+            --adidas-bg-gray: #ebedee;
+            --adidas-light-gray: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: #000;
+            background-color: #fff;
+        }
+
+        /* Top Utility Bar */
+        .top-bar {
+            background-color: var(--adidas-black);
+            color: var(--adidas-white);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 6px 0;
+        }
+        .top-bar a {
+            color: var(--adidas-white);
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        /* Main Navbar */
+        .main-nav {
+            border-bottom: 1px solid #e9ecef;
+            padding: 12px 0;
+            background: #fff;
+        }
+
+        /* Brand Logo Style DK */
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #000;
+        }
+        .logo-stripes {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 28px;
+        }
+        .stripe {
+            background-color: #000;
+            width: 7px;
+            transform: skewX(-20deg);
+        }
+        .stripe-1 { height: 14px; }
+        .stripe-2 { height: 21px; }
+        .stripe-3 { height: 28px; }
+
+        .brand-text {
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: -1px;
+            font-style: italic;
+            line-height: 1;
+        }
+
+        .nav-categories .nav-link {
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            padding: 8px 16px !important;
+            text-transform: uppercase;
+        }
+        .nav-categories .nav-link:hover {
+            border-bottom: 2px solid #000;
+        }
+
+        .search-box {
+            position: relative;
+            background-color: #eceff1;
+            border-radius: 0;
+        }
+        .search-box input {
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            padding: 8px 35px 8px 12px;
+            width: 180px;
+            transition: width 0.3s;
+        }
+        .search-box input:focus {
+            outline: none;
+            box-shadow: none;
+            width: 220px;
+        }
+        .search-box i {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Sub Category Tabs Horizontal Scroll */
+        .sub-nav-scroll {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+            scrollbar-width: none;
+        }
+        .sub-nav-scroll::-webkit-scrollbar { display: none; }
+        .sub-nav-item {
+            font-size: 13px;
+            font-weight: 600;
+            color: #000;
+            text-decoration: none;
+            padding-bottom: 5px;
+        }
+        .sub-nav-item.active {
+            border-bottom: 2px solid #000;
+        }
+
+        /* Filter Button */
+        .btn-filter {
+            border: 1px solid #000;
+            border-radius: 0;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
+            padding: 8px 20px;
+            background: #fff;
+        }
+        .btn-filter:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* Product Card */
+        .adidas-card {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .img-wrapper {
+            background-color: var(--adidas-light-gray);
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .adidas-card:hover .img-wrapper img {
+            transform: scale(1.05);
+        }
+        .wishlist-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .price-tag {
+            background: #fff;
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .card-info {
+            padding-top: 10px;
+        }
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #000;
+            text-decoration: none;
+            display: block;
+        }
+        .product-category {
+            font-size: 12px;
+            color: var(--adidas-gray);
+            margin-bottom: 4px;
+        }
+
+        /* Offcanvas & Drawer Styling */
+        .offcanvas {
+            border-radius: 0;
+        }
+        .btn-black {
+            background-color: #000;
+            color: #fff;
+            border-radius: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 12px 20px;
+            width: 100%;
+            border: none;
+        }
+        .btn-black:hover {
+            background-color: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Utility Bar -->
+    <div class="top-bar">
+        <div class="container-fluid px-4 d-flex justify-content-end align-items-center">
+            <a href="#">TÌM CỬA HÀNG</a>
+            <a href="#">TRỢ GIÚP</a>
+            <a href="#">THEO DÕI ĐƠN HÀNG</a>
+            <a href="#">ĐĂNG KÝ HỘI VIÊN</a>
+            <span class="ms-3"><i class="fa-solid fa-flag text-danger"></i> VN</span>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="main-nav sticky-top">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            
+            <!-- Logo Brand DK -->
+            <a href="#" class="brand-logo-container">
+                <div class="logo-stripes">
+                    <div class="stripe stripe-1"></div>
+                    <div class="stripe stripe-2"></div>
+                    <div class="stripe stripe-3"></div>
+                </div>
+                <span class="brand-text">DK FASHION</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <ul class="nav nav-categories d-none d-md-flex">
+                <li class="nav-item"><a class="nav-link text-danger" href="#">NAM</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">NỮ</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">TRẺ EM</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">THỂ THAO</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">BỘ SỰ TẬP</a></li>
+                <li class="nav-item"><a class="nav-link text-muted" href="#">OUTLET</a></li>
+            </ul>
+
+            <!-- Right Icons & Search -->
+            <div class="d-flex align-items-center gap-3">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm..." onkeyup="filterProducts()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <a href="#" class="text-dark fs-5"><i class="fa-regular fa-user"></i></a>
+                <a href="#" class="text-dark fs-5"><i class="fa-regular fa-heart"></i></a>
+                <button class="bg-transparent border-0 text-dark fs-5 position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-black fs-6" style="font-size: 10px !important;">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container-fluid px-4 mt-3">
+        
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="font-size: 12px; font-weight: 600;">
+                <li class="breadcrumb-item"><a href="#" class="text-dark"><i class="fa-solid fa-arrow-left me-1"></i> Trở lại</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-dark">Trang Chủ</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-dark">Nữ</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-dark">Trainers</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Giày</li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex align-items-baseline mb-2">
+            <h1 class="fw-black display-5 text-uppercase mb-0" style="font-weight: 900; letter-spacing: -1px;">NỮ · TRAINERS · GIÀY</h1>
+            <span class="text-muted ms-3 fw-bold fs-6">1459</span>
+        </div>
+
+        <!-- Sub Categories Scroll Bar -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="sub-nav-scroll flex-grow-1">
+                <a href="#" class="sub-nav-item">Hàng mới về</a>
+                <a href="#" class="sub-nav-item active">Giày sneaker</a>
+                <a href="#" class="sub-nav-item">Chạy bộ</a>
+                <a href="#" class="sub-nav-item">Giày tập</a>
+                <a href="#" class="sub-nav-item">Lifestyle</a>
+                <a href="#" class="sub-nav-item">Giày bóng đá</a>
+                <a href="#" class="sub-nav-item">Giày bóng rổ</a>
+                <a href="#" class="sub-nav-item">Giày quần vợt</a>
+                <a href="#" class="sub-nav-item">Ba lê</a>
+                <a href="#" class="sub-nav-item">Dép & Dép xỏ ngón</a>
+                <a href="#" class="sub-nav-item">Giày Golf</a>
+            </div>
+            
+            <!-- Filter Button Trigger -->
+            <button class="btn btn-filter ms-3 d-flex align-items-center gap-2" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
+                Lọc & Sắp xếp <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+
+        <!-- Product Grid List -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-2" id="productGrid">
+            
+            <!-- Product Item 1 -->
+            <div class="col product-item">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600" alt="Giày Samba Classic">
+                        <div class="price-tag">2.400.000<sup>đ</sup></div>
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="product-title">Giày Samba OG Unisex</a>
+                        <div class="product-category">Originals</div>
+                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Samba OG Unisex', 2400000)">Thêm vào giỏ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 2 -->
+            <div class="col product-item">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600" alt="Giày Superstar">
+                        <div class="price-tag">2.600.000<sup>đ</sup></div>
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="product-title">Giày Superstar Mũi Vỏ Sò</a>
+                        <div class="product-category">Originals</div>
+                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Superstar Mũi Vỏ Sò', 2600000)">Thêm vào giỏ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 3 -->
+            <div class="col product-item">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="Giày Ultraboost">
+                        <div class="price-tag">4.500.000<sup>đ</sup></div>
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="product-title">Giày Chạy Bộ Ultraboost Light</a>
+                        <div class="product-category">Chạy bộ</div>
+                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Chạy Bộ Ultraboost Light', 4500000)">Thêm vào giỏ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 4 -->
+            <div class="col product-item">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600" alt="Giày Forum Low">
+                        <div class="price-tag">2.800.000<sup>đ</sup></div>
+                    </div>
+                    <div class="card-info">
+                        <a href="#" class="product-title">Giày Forum Low Classic</a>
+                        <div class="product-category">Lifestyle</div>
+                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Forum Low Classic', 2800000)">Thêm vào giỏ</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="bg-black text-white mt-5 py-4 border-top">
+        <div class="container-fluid px-4 text-center">
+            <p class="small mb-1">&copy; 2026 DK FASHION. Tên miền thực tế: <strong>fashionstore.id.vn</strong></p>
+            <p class="small text-muted mb-0">Đồ án môn học - Đại học Văn Hiến (VHU) - Sinh viên: Đoàn Duy Khánh</p>
+        </div>
+    </footer>
+
+    <!-- Cart Drawer Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-black">GIỎ HÀNG CỦA BẠN</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column justify-content-between">
+            <div id="cartItemsList">
+                <p class="text-muted text-center my-4">Giỏ hàng đang trống.</p>
+            </div>
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between font-weight-bold mb-3 fs-5">
+                    <span>TỔNG CỘNG:</span>
+                    <span id="cartTotal" class="fw-bold">0<sup>đ</sup></span>
+                </div>
+                <button class="btn-black">THANH TOÁN NGAY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Drawer Offcanvas -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="filterDrawer">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-black">LỌC & SẮP XẾP</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="mb-4">
+                <h6 class="fw-bold">SẮP XẾP THEO</h6>
+                <div class="form-check"><input class="form-check-input" type="radio" name="sort" checked> Giá: Thấp đến Cao</div>
+                <div class="form-check"><input class="form-check-input" type="radio" name="sort"> Giá: Cao đến Thấp</div>
+                <div class="form-check"><input class="form-check-input" type="radio" name="sort"> Mới nhất</div>
+            </div>
+            <button class="btn-black" data-bs-dismiss="offcanvas">ÁP DỤNG</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap & Custom JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let cart = [];
+
+        function addToCart(title, price) {
+            cart.push({ title, price });
+            updateCartUI();
+            let cartDrawer = new bootstrap.Offcanvas(document.getElementById('cartDrawer'));
+            cartDrawer.show();
+        }
+
+        function updateCartUI() {
+            document.getElementById('cartBadge').innerText = cart.length;
+            let listHtml = '';
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                total += item.price;
+                listHtml += `
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <div>
+                            <div class="fw-bold fs-6">${item.title}</div>
+                            <div class="text-muted small">${item.price.toLocaleString('vi-VN')} đ</div>
+                        </div>
+                        <button class="btn btn-sm text-danger" onclick="removeFromCart(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cartItemsList').innerHTML = cart.length ? listHtml : '<p class="text-muted text-center my-4">Giỏ hàng đang trống.</p>';
+            document.getElementById('cartTotal').innerHTML = total.toLocaleString('vi-VN') + '<sup>đ</sup>';
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function filterProducts() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let items = document.getElementsByClassName('product-item');
+
+            for (let item of items) {
+                let title = item.querySelector('.product-title').innerText.toLowerCase();
+                if (title.includes(input)) {
+                    item.style.display = "";
+                } else {
+                    item.style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
