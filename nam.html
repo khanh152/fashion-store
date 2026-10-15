@@ -1,52 +1,399 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang Nam - DK FASHION</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #fff; color: #000; }
-    #catalog-view { display: block; }
-    #detail-view { display: none; }
-    .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .product-card { border: 1px solid #eee; padding: 15px; cursor: pointer; text-align: center; }
-    .product-card img { width: 100%; height: 250px; object-fit: cover; }
-    .price { font-weight: bold; margin-top: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Mục Đồ Nam - DK FASHION</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,700;0,900;1,900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --adidas-black: #000000;
+            --adidas-white: #ffffff;
+            --adidas-gray: #767677;
+            --adidas-light-gray: #f5f5f5;
+            --adidas-red: #d13b3b;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--adidas-black);
+            background-color: var(--adidas-white);
+        }
+
+        /* Top Utility Bar */
+        .top-bar {
+            background-color: var(--adidas-black);
+            color: var(--adidas-white);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 6px 0;
+        }
+        .top-bar a {
+            color: var(--adidas-white);
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        /* Main Navbar */
+        .main-nav {
+            border-bottom: 1px solid #e9ecef;
+            padding: 12px 0;
+            background: #fff;
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #000;
+        }
+        .logo-stripes {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 28px;
+        }
+        .stripe {
+            background-color: #000;
+            width: 7px;
+            transform: skewX(-20deg);
+        }
+        .stripe-1 { height: 14px; }
+        .stripe-2 { height: 21px; }
+        .stripe-3 { height: 28px; }
+
+        .brand-text {
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: -1px;
+            font-style: italic;
+            line-height: 1;
+        }
+
+        .nav-categories .nav-link {
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            padding: 8px 16px !important;
+            text-transform: uppercase;
+        }
+        .nav-categories .nav-link.active {
+            border-bottom: 2px solid #000;
+        }
+
+        /* Sub Category Filter Tags (Pills) */
+        .filter-tags-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 15px 0;
+            scrollbar-width: none;
+        }
+        .filter-tags-scroll::-webkit-scrollbar { display: none; }
+        
+        .filter-tag-pill {
+            background-color: #f0f0f0;
+            color: #000;
+            border: 1px solid transparent;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 0;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .filter-tag-pill:hover, .filter-tag-pill.active {
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* Product Card Styling */
+        .adidas-card {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            position: relative;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+        .img-wrapper {
+            background-color: var(--adidas-light-gray);
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .adidas-card:hover .img-wrapper img {
+            transform: scale(1.06);
+        }
+        .wishlist-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 2;
+            color: #000;
+            transition: color 0.2s;
+        }
+        .wishlist-btn:hover {
+            color: var(--adidas-red);
+        }
+        
+        /* Badges on card */
+        .badge-tag {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #fff;
+            color: #000;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-sale {
+            background: var(--adidas-red);
+            color: #fff;
+        }
+
+        .card-info {
+            padding-top: 12px;
+        }
+        .product-price-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+        .current-price {
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+        }
+        .current-price.sale {
+            color: var(--adidas-red);
+        }
+        .original-price {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--adidas-gray);
+            text-decoration: line-through;
+        }
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #000;
+            text-decoration: none;
+            display: block;
+            line-height: 1.3;
+        }
+        .product-category {
+            font-size: 12px;
+            color: var(--adidas-gray);
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- DANH MỤC -->
-  <div id="catalog-view">
-    <a href="index.html">← Trở về Trang chủ</a>
-    <h2>Danh Mục Đồ Nam</h2>
-    <div class="product-grid">
-      <div class="product-card" onclick="showDetail()">
-        <img src="https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/0ef3878b30ef47808381af3a00f1ebaa_9366/Giay_Samba_OG_trang_B75806_01_00_standard.jpg" alt="Giày">
-        <h3>Giày Samba OG</h3>
-        <div class="price">2.900.000₫</div>
-      </div>
+    <!-- Top Utility Bar -->
+    <div class="top-bar">
+        <div class="container-fluid px-4 d-flex justify-content-end align-items-center">
+            <a href="#">TÌM CỬA HÀNG</a>
+            <a href="#">TRỢ GIÚP</a>
+            <a href="#">ĐĂNG KÝ HỘI VIÊN</a>
+            <span class="ms-3"><i class="fa-solid fa-flag text-danger"></i> VN</span>
+        </div>
     </div>
-  </div>
 
-  <!-- CHI TIẾT SẢN PHẨM -->
-  <div id="detail-view">
-    <button onclick="showCatalog()">← Trở lại danh mục</button>
-    <h1>GIÀY SAMBA OG</h1>
-    <p>Giá: 2.900.000₫</p>
-    <button style="background:#000; color:#fff; padding:15px 30px; border:none; cursor:pointer;">THÊM VÀO GIỎ HÀNG</button>
-  </div>
+    <!-- Main Navigation Bar -->
+    <nav class="main-nav sticky-top">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            
+            <!-- Logo Brand DK -->
+            <a href="index.html" class="brand-logo-container">
+                <div class="logo-stripes">
+                    <div class="stripe stripe-1"></div>
+                    <div class="stripe stripe-2"></div>
+                    <div class="stripe stripe-3"></div>
+                </div>
+                <span class="brand-text">DK FASHION</span>
+            </a>
 
-  <script>
-    function showDetail() {
-      document.getElementById('catalog-view').style.display = 'none';
-      document.getElementById('detail-view').style.display = 'block';
-    }
-    function showCatalog() {
-      document.getElementById('detail-view').style.display = 'none';
-      document.getElementById('catalog-view').style.display = 'block';
-    }
-  </script>
+            <!-- Navigation Links -->
+            <ul class="nav nav-categories d-none d-md-flex">
+                <li class="nav-item"><a class="nav-link active" href="nam.html">NAM</a></li>
+                <li class="nav-item"><a class="nav-link" href="index.html">NỮ</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">TRẺ EM</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">THỂ THAO</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">BỘ SỰ TẬP</a></li>
+                <li class="nav-item"><a class="nav-link text-muted" href="#">OUTLET</a></li>
+            </ul>
 
+            <!-- Right Icons & Search -->
+            <div class="d-flex align-items-center gap-3">
+                <a href="index.html" class="btn btn-outline-dark btn-sm rounded-0 fw-bold px-3"><i class="fa-solid fa-arrow-left me-1"></i> Trang chủ</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container-fluid px-4 mt-4">
+        
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="font-size: 12px; font-weight: 600;">
+                <li class="breadcrumb-item"><a href="index.html" class="text-dark text-decoration-none">Trang Chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nam</li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="d-flex align-items-baseline mb-2">
+            <h1 class="fw-black display-6 text-uppercase mb-0" style="font-weight: 900; letter-spacing: -1px;">NAM · ĐỒ THỂ THAO & THỜI TRANG</h1>
+            <span class="text-muted ms-3 fw-bold fs-6">1820 Sản Phẩm</span>
+        </div>
+
+        <!-- Sub Category Filter Tags Scroll -->
+        <div class="filter-tags-scroll mb-4">
+            <a href="#" class="filter-tag-pill active">FIFA World Cup 26™ Away kits</a>
+            <a href="#" class="filter-tag-pill">FIFA World Cup 26™ Collection</a>
+            <a href="#" class="filter-tag-pill">Court sports</a>
+            <a href="#" class="filter-tag-pill">Hàng Mới Về</a>
+            <a href="#" class="filter-tag-pill">Áo đấu đội tuyển</a>
+            <a href="#" class="filter-tag-pill">Giày Sneaker Nam</a>
+            <a href="#" class="filter-tag-pill">Quần Short Thể Thao</a>
+        </div>
+
+        <!-- Product Grid List -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            
+            <!-- Product Item 1 -->
+            <div class="col">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <span class="badge-tag">Mới</span>
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600" alt="Áo Đấu Đội Tuyển">
+                    </div>
+                    <div class="card-info">
+                        <div class="product-price-box">
+                            <span class="current-price">2.100.000<sup>đ</sup></span>
+                        </div>
+                        <a href="#" class="product-title">Áo Đấu Sân Khách Đội Tuyển Nhật Bản 26</a>
+                        <div class="product-category">Performance</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 2 -->
+            <div class="col">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <span class="badge-tag badge-sale">-20%</span>
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600" alt="Quần Short Thể Thao">
+                    </div>
+                    <div class="card-info">
+                        <div class="product-price-box">
+                            <span class="current-price sale">960.000<sup>đ</sup></span>
+                            <span class="original-price">1.200.000<sup>đ</sup></span>
+                        </div>
+                        <a href="#" class="product-title">Quần Short Sân Khách Đội Tuyển Argentina</a>
+                        <div class="product-category">Performance</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 3 -->
+            <div class="col">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <span class="badge-tag">Hot</span>
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600" alt="Giày Forum Nam">
+                    </div>
+                    <div class="card-info">
+                        <div class="product-price-box">
+                            <span class="current-price">2.800.000<sup>đ</sup></span>
+                        </div>
+                        <a href="#" class="product-title">Giày Forum Low Nam Classic</a>
+                        <div class="product-category">Originals</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 4 -->
+            <div class="col">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="Giày Chạy Bộ Nam">
+                    </div>
+                    <div class="card-info">
+                        <div class="product-price-box">
+                            <span class="current-price">4.500.000<sup>đ</sup></span>
+                        </div>
+                        <a href="#" class="product-title">Giày Chạy Bộ Ultraboost Light Nam</a>
+                        <div class="product-category">Running</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Item 5 -->
+            <div class="col">
+                <div class="adidas-card">
+                    <div class="img-wrapper">
+                        <span class="badge-tag badge-sale">-15%</span>
+                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600" alt="Áo Hoodie Nam">
+                    </div>
+                    <div class="card-info">
+                        <div class="product-price-box">
+                            <span class="current-price sale">1.700.000<sup>đ</sup></span>
+                            <span class="original-price">2.000.000<sup>đ</sup></span>
+                        </div>
+                        <a href="#" class="product-title">Áo Hoodie Thể Thao Essentials Fleece</a>
+                        <div class="product-category">Sportswear</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="bg-black text-white mt-5 py-4 border-top">
+        <div class="container-fluid px-4 text-center">
+            <p class="small mb-1">&copy; 2026 DK FASHION. Tên miền thực tế: <strong>fashionstore.id.vn</strong></p>
+            <p class="small text-muted mb-0">Đồ án môn học - Đại học Văn Hiến (VHU) - Sinh viên: Đoàn Duy Khánh</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
