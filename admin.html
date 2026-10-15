@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Sản Phẩm - DK FASHION ADMIN</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,700;0,900;1,900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .admin-header {
+            background-color: #000;
+            color: #fff;
+            padding: 15px 30px;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP BẢO MẬT -->
+    <div id="loginScreen" class="container mt-5" style="max-width: 400px;">
+        <div class="card card-custom p-4 bg-white">
+            <h3 class="text-center fw-bold mb-4">🔐 ĐĂNG NHẬP ADMIN</h3>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">MẬT KHẨU TRUY CẬP</label>
+                <input type="password" id="adminPassword" class="form-control rounded-0" placeholder="Nhập mật khẩu (mặc định: 123456)">
+            </div>
+            <button class="btn btn-dark w-100 rounded-0 fw-bold py-2" onclick="handleLogin()">ĐĂNG NHẬP HỆ THỐNG</button>
+            <div class="text-center mt-3">
+                <a href="nam.html" class="small text-muted text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Quay lại trang chủ Nam</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH QUẢN TRỊ CHÍNH (Ẩn khi chưa đăng nhập) -->
+    <div id="adminDashboard" class="container-fluid pb-5" style="display: none;">
+        <div class="admin-header d-flex justify-content-between align-items-center mb-4">
+            <h4 class="m-0 fw-bold">⚙️ HỆ THỐNG QUẢN TRỊ SẢN PHẨM - DK FASHION</h4>
+            <div>
+                <a href="nam.html" target="_blank" class="btn btn-outline-light btn-sm rounded-0 me-2"><i class="fa-solid fa-eye me-1"></i> Xem Website Nam</a>
+                <button class="btn btn-danger btn-sm rounded-0" onclick="handleLogout()">Đăng xuất</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Form Thêm / Sửa Sản Phẩm -->
+            <div class="card card-custom p-4 mb-4 bg-white">
+                <h5 class="fw-bold mb-3" id="formTitle">➕ THÊM SẢN PHẨM NAM MỚI</h5>
+                <form id="productForm" onsubmit="saveProduct(event)">
+                    <input type="hidden" id="productId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Tên Sản Phẩm</label>
+                            <input type="text" id="title" class="form-control rounded-0" required placeholder="Ví dụ: Áo thun thể thao nam">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Dòng Sản Phẩm / Danh mục</label>
+                            <input type="text" id="category" class="form-control rounded-0" required placeholder="Ví dụ: Performance • Áo Nam">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Giá Bán Hiện Tại (VNĐ)</label>
+                            <input type="number" id="price" class="form-control rounded-0" required placeholder="Ví dụ: 1200000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Giá Gốc (Nếu có sale)</label>
+                            <input type="number" id="originalPrice" class="form-control rounded-0" placeholder="Ví dụ: 2000000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">% Giảm Giá</label>
+                            <input type="number" id="discount" class="form-control rounded-0" placeholder="Ví dụ: 40">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small">Đường Dẫn Hình Ảnh (URL)</label>
+                            <input type="url" id="image" class="form-control rounded-0" required placeholder="Dán link ảnh từ Unsplash hoặc hình online...">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small">Mô Tả Chi Tiết Sản Phẩm</label>
+                            <textarea id="description" class="form-control rounded-0" rows="3" placeholder="Nhập chất liệu, tính năng, phong cách..."></textarea>
+                        </div>
+                        <div class="col-md-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-dark rounded-0 px-4 fw-bold">💾 LƯU SẢN PHẨM</button>
+                            <button type="button" class="btn btn-secondary rounded-0 px-4" onclick="resetForm()">Làm mới form</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bảng Danh Sách Sản Phẩm -->
+            <div class="card card-custom p-4 bg-white">
+                <h5 class="fw-bold mb-3">📋 DANH SÁCH SẢN PHẨM HIỆN TẠI TRÊN HỆ THỐNG</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th>Danh Mục</th>
+                                <th>Giá Bán</th>
+                                <th>Giá Gốc</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductTable">
+                            <!-- Dữ liệu render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Kiểm tra đăng nhập
+        function handleLogin() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === '123456') { // Mật khẩu mặc định là 123456
+                localStorage.setItem('DK_ADMIN_LOGGED', 'true');
+                checkAuth();
+            } else {
+                alert('Mật khẩu không chính xác! Vui lòng thử lại.');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('DK_ADMIN_LOGGED');
+            checkAuth();
+        }
+
+        function checkAuth() {
+            const isLogged = localStorage.getItem('DK_ADMIN_LOGGED');
+            if (isLogged === 'true') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                loadAdminTable();
+            } else {
+                document.getElementById('loginScreen').style.display = 'block';
+                document.getElementById('adminDashboard').style.display = 'none';
+            }
+        }
+
+        // Tải danh sách sản phẩm vào bảng quản trị
+        function loadAdminTable() {
+            let products = JSON.parse(localStorage.getItem('DK_PRODUCTS_NAM')) || [];
+            let tbody = document.getElementById('adminProductTable');
+            let html = '';
+
+            if (products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Chưa có sản phẩm nào.</td></tr>`;
+                return;
+            }
+
+            products.forEach(p => {
+                html += `
+                    <tr>
+                        <td class="text-center"><img src="${p.image}" alt=""></td>
+                        <td class="fw-bold">${p.title}</td>
+                        <td>${p.category}</td>
+                        <td class="text-danger fw-bold">${Number(p.price).toLocaleString('vi-VN')} đ</td>
+                        <td>${p.originalPrice ? Number(p.originalPrice).toLocaleString('vi-VN') + ' đ' : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning rounded-0 me-1" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                            <button class="btn btn-sm btn-danger rounded-0" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i> Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Lưu sản phẩm (Thêm mới hoặc Cập nhật)
+        function saveProduct(event) {
+            event.preventDefault();
+            let products = JSON.parse(localStorage.getItem('DK_PRODUCTS_NAM')) || [];
+
+            let id = document.getElementById('productId').value;
+            let title = document.getElementById('title').value;
+            let category = document.getElementById('category').value;
+            let price = Number(document.getElementById('price').value);
+            let originalPrice = Number(document.getElementById('originalPrice').value) || 0;
+            let discount = Number(document.getElementById('discount').value) || 0;
+            let image = document.getElementById('image').value;
+            let description = document.getElementById('description').value;
+
+            if (id) {
+                // Cập nhật sản phẩm cũ
+                let index = products.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    products[index] = { id, title, category, price, originalPrice, discount, image, description };
+                }
+            } else {
+                // Thêm sản phẩm mới
+                let newId = 'sp-' + Date.now();
+                products.push({ id: newId, title, category, price, originalPrice, discount, image, description });
+            }
+
+            localStorage.setItem('DK_PRODUCTS_NAM', JSON.stringify(products));
+            loadAdminTable();
+            resetForm();
+            alert('Đã lưu dữ liệu sản phẩm thành công! Trang Nam đã được cập nhật tự động.');
+        }
+
+        // Đưa dữ liệu lên form để sửa
+        function editProduct(id) {
+            let products = JSON.parse(localStorage.getItem('DK_PRODUCTS_NAM')) || [];
+            let p = products.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('productId').value = p.id;
+            document.getElementById('title').value = p.title;
+            document.getElementById('category').value = p.category;
+            document.getElementById('price').value = p.price;
+            document.getElementById('originalPrice').value = p.originalPrice || '';
+            document.getElementById('discount').value = p.discount || '';
+            document.getElementById('image').value = p.image;
+            document.getElementById('description').value = p.description || '';
+
+            document.getElementById('formTitle').innerText = '✏️ CHỈNH SỬA SẢN PHẨM: ' + p.title;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Xóa sản phẩm
+        function deleteProduct(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
+                let products = JSON.parse(localStorage.getItem('DK_PRODUCTS_NAM')) || [];
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('DK_PRODUCTS_NAM', JSON.stringify(products));
+                loadAdminTable();
+            }
+        }
+
+        // Làm mới form
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('formTitle').innerText = '➕ THÊM SẢN PHẨM NAM MỚI';
+        }
+
+        // Kiểm tra quyền khi load trang
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html>
