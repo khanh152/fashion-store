@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Nam - DK FASHION</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #fff; color: #000; }
+    #catalog-view { display: block; }
+    #detail-view { display: none; }
+    .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .product-card { border: 1px solid #eee; padding: 15px; cursor: pointer; text-align: center; }
+    .product-card img { width: 100%; height: 250px; object-fit: cover; }
+    .price { font-weight: bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- DANH MỤC -->
+  <div id="catalog-view">
+    <a href="index.html">← Trở về Trang chủ</a>
+    <h2>Danh Mục Đồ Nam</h2>
+    <div class="product-grid">
+      <div class="product-card" onclick="showDetail()">
+        <img src="https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/0ef3878b30ef47808381af3a00f1ebaa_9366/Giay_Samba_OG_trang_B75806_01_00_standard.jpg" alt="Giày">
+        <h3>Giày Samba OG</h3>
+        <div class="price">2.900.000₫</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHI TIẾT SẢN PHẨM -->
+  <div id="detail-view">
+    <button onclick="showCatalog()">← Trở lại danh mục</button>
+    <h1>GIÀY SAMBA OG</h1>
+    <p>Giá: 2.900.000₫</p>
+    <button style="background:#000; color:#fff; padding:15px 30px; border:none; cursor:pointer;">THÊM VÀO GIỎ HÀNG</button>
+  </div>
+
+  <script>
+    function showDetail() {
+      document.getElementById('catalog-view').style.display = 'none';
+      document.getElementById('detail-view').style.display = 'block';
+    }
+    function showCatalog() {
+      document.getElementById('detail-view').style.display = 'none';
+      document.getElementById('catalog-view').style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
