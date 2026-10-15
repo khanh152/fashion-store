@@ -133,7 +133,6 @@
             color: #000;
             text-decoration: none;
             padding-bottom: 5px;
-            cursor: pointer;
         }
         .sub-nav-item.active {
             border-bottom: 2px solid #000;
@@ -265,7 +264,7 @@
 
             <!-- Navigation Links -->
             <ul class="nav nav-categories d-none d-md-flex">
-                <li class="nav-item"><a class="nav-link" href="nam.html" onclick="event.preventDefault(); window.location.href='nam.html';">NAM</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">NAM</a></li>
                 <li class="nav-item"><a class="nav-link" href="#">NỮ</a></li>
                 <li class="nav-item"><a class="nav-link" href="#">TRẺ EM</a></li>
                 <li class="nav-item"><a class="nav-link" href="#">THỂ THAO</a></li>
@@ -309,14 +308,20 @@
             <span class="text-muted ms-3 fw-bold fs-6">1459</span>
         </div>
 
-        <!-- Sub Categories Scroll Bar (ĐÃ THAY ĐỔI THEO YÊU CẦU) -->
+        <!-- Sub Categories Scroll Bar -->
         <div class="d-flex justify-content-between align-items-center">
             <div class="sub-nav-scroll flex-grow-1">
-                <a class="sub-nav-item active" onclick="filterBySub('all', this)">Tất cả</a>
-                <a class="sub-nav-item" onclick="filterBySub('giày', this)">Giày</a>
-                <a class="sub-nav-item" onclick="filterBySub('áo', this)">Áo</a>
-                <a class="sub-nav-item" onclick="filterBySub('quần', this)">Quần</a>
-                <a class="sub-nav-item" onclick="filterBySub('dép', this)">Dép</a>
+                <a href="#" class="sub-nav-item">Hàng mới về</a>
+                <a href="#" class="sub-nav-item active">Giày sneaker</a>
+                <a href="#" class="sub-nav-item">Chạy bộ</a>
+                <a href="#" class="sub-nav-item">Giày tập</a>
+                <a href="#" class="sub-nav-item">Lifestyle</a>
+                <a href="#" class="sub-nav-item">Giày bóng đá</a>
+                <a href="#" class="sub-nav-item">Giày bóng rổ</a>
+                <a href="#" class="sub-nav-item">Giày quần vợt</a>
+                <a href="#" class="sub-nav-item">Ba lê</a>
+                <a href="#" class="sub-nav-item">Dép & Dép xỏ ngón</a>
+                <a href="#" class="sub-nav-item">Giày Golf</a>
             </div>
             
             <!-- Filter Button Trigger -->
@@ -329,7 +334,7 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-2" id="productGrid">
             
             <!-- Product Item 1 -->
-            <div class="col product-item" data-category="giày">
+            <div class="col product-item">
                 <div class="adidas-card">
                     <div class="img-wrapper">
                         <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
@@ -345,7 +350,7 @@
             </div>
 
             <!-- Product Item 2 -->
-            <div class="col product-item" data-category="giày">
+            <div class="col product-item">
                 <div class="adidas-card">
                     <div class="img-wrapper">
                         <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
@@ -361,7 +366,7 @@
             </div>
 
             <!-- Product Item 3 -->
-            <div class="col product-item" data-category="giày">
+            <div class="col product-item">
                 <div class="adidas-card">
                     <div class="img-wrapper">
                         <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
@@ -377,7 +382,7 @@
             </div>
 
             <!-- Product Item 4 -->
-            <div class="col product-item" data-category="giày">
+            <div class="col product-item">
                 <div class="adidas-card">
                     <div class="img-wrapper">
                         <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
@@ -486,21 +491,6 @@
             for (let item of items) {
                 let title = item.querySelector('.product-title').innerText.toLowerCase();
                 if (title.includes(input)) {
-                    item.style.display = "";
-                } else {
-                    item.style.display = "none";
-                }
-            }
-        }
-
-        // Hàm xử lý khi bấm vào các nút lọc: Tất cả, Giày, Áo, Quần, Dép
-        function filterBySub(category, element) {
-            document.querySelectorAll('.sub-nav-item').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-
-            let items = document.getElementsByClassName('product-item');
-            for (let item of items) {
-                if (category === 'all' || item.getAttribute('data-category') === category) {
                     item.style.display = "";
                 } else {
                     item.style.display = "none";
