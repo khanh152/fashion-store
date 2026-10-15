@@ -86,8 +86,9 @@
             letter-spacing: 1.5px;
             padding: 8px 16px !important;
             text-transform: uppercase;
+            cursor: pointer;
         }
-        .nav-categories .nav-link:hover {
+        .nav-categories .nav-link.active, .nav-categories .nav-link:hover {
             border-bottom: 2px solid #000;
         }
 
@@ -101,13 +102,13 @@
             border: none;
             font-size: 13px;
             padding: 8px 35px 8px 12px;
-            width: 180px;
+            width: 140px;
             transition: width 0.3s;
         }
         .search-box input:focus {
             outline: none;
             box-shadow: none;
-            width: 220px;
+            width: 180px;
         }
         .search-box i {
             position: absolute;
@@ -119,23 +120,25 @@
         /* Sub Category Tabs Horizontal Scroll */
         .sub-nav-scroll {
             display: flex;
-            gap: 25px;
+            gap: 15px;
             overflow-x: auto;
             white-space: nowrap;
-            padding: 15px 0;
-            border-bottom: 1px solid #e9ecef;
+            padding: 10px 0;
             scrollbar-width: none;
         }
         .sub-nav-scroll::-webkit-scrollbar { display: none; }
         .sub-nav-item {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: #000;
+            background: #f5f5f5;
             text-decoration: none;
-            padding-bottom: 5px;
+            padding: 6px 14px;
+            border-radius: 0;
         }
-        .sub-nav-item.active {
-            border-bottom: 2px solid #000;
+        .sub-nav-item.active, .sub-nav-item:hover {
+            background: #000;
+            color: #fff;
         }
 
         /* Filter Button */
@@ -143,10 +146,11 @@
             border: 1px solid #000;
             border-radius: 0;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 1px;
-            padding: 8px 20px;
+            padding: 6px 15px;
             background: #fff;
+            white-space: nowrap;
         }
         .btn-filter:hover {
             background: #000;
@@ -155,11 +159,15 @@
 
         /* Product Card */
         .adidas-card {
-            border: none;
+            border: 1px solid #eee;
             border-radius: 0;
-            background: transparent;
+            background: #fff;
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         .img-wrapper {
             background-color: var(--adidas-light-gray);
@@ -181,44 +189,97 @@
         }
         .wishlist-btn {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 10px;
+            right: 10px;
             background: transparent;
             border: none;
             font-size: 18px;
             cursor: pointer;
             z-index: 2;
         }
-        .price-tag {
-            background: #fff;
+        .discount-badge {
             position: absolute;
-            bottom: 8px;
-            left: 8px;
-            padding: 2px 8px;
-            font-size: 12px;
+            bottom: 10px;
+            left: 10px;
+            background: #fff;
+            color: #000;
+            font-size: 11px;
             font-weight: 700;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
         }
         .card-info {
-            padding-top: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-between;
+        }
+        .price-container {
+            margin-bottom: 6px;
+        }
+        .current-price {
+            font-weight: 900;
+            font-size: 15px;
+            color: #d32f2f;
+        }
+        .original-price {
+            font-size: 12px;
+            text-decoration: line-through;
+            color: #888;
+            margin-left: 6px;
         }
         .product-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 2px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
             color: #000;
             text-decoration: none;
-            display: block;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
         }
         .product-category {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--adidas-gray);
-            margin-bottom: 4px;
         }
 
-        /* Offcanvas & Drawer Styling */
-        .offcanvas {
+        /* Size Selection Pill */
+        .btn-size {
+            border: 1px solid #000;
             border-radius: 0;
+            font-weight: 700;
+            font-size: 13px;
+            width: 45px;
+            height: 40px;
+            background: #fff;
         }
+        .btn-size.active, .btn-size:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 768px) {
+            .top-bar { display: none; }
+            .brand-text { font-size: 18px; }
+            .search-box input { width: 100px; }
+            .search-box input:focus { width: 120px; }
+            
+            /* Lưới 2 cột cho Mobile */
+            #productGrid {
+                --bs-gutter-x: 0.5rem;
+                --bs-gutter-y: 0.5rem;
+            }
+            .product-col {
+                width: 50% !important;
+            }
+            .current-price { font-size: 13px; }
+            .product-title { font-size: 12px; }
+        }
+
         .btn-black {
             background-color: #000;
             color: #fff;
@@ -239,165 +300,100 @@
 
     <!-- Top Utility Bar -->
     <div class="top-bar">
-        <div class="container-fluid px-4 d-flex justify-content-end align-items-center">
-            <a href="#">TÌM CỬA HÀNG</a>
-            <a href="#">TRỢ GIÚP</a>
-            <a href="#">THEO DÕI ĐƠN HÀNG</a>
-            <a href="#">ĐĂNG KÝ HỘI VIÊN</a>
-            <span class="ms-3"><i class="fa-solid fa-flag text-danger"></i> VN</span>
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-warning me-2"><i class="fa-solid fa-crown"></i> CHÀO MỪNG ĐẾN VỚI DK FASHION - GIẢM 20% ĐƠN HÀNG ĐẦU TIÊN</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="#">TÌM CỬA HÀNG</a>
+                <a href="#">TRỢ GIÚP</a>
+                <a href="#">THEO DÕI ĐƠN HÀNG</a>
+                <a href="javascript:void(0)" onclick="openAdminModal()" class="text-warning fw-bold"><i class="fa-solid fa-user-gear me-1"></i> QUẢN TRỊ ADMIN</a>
+                <span class="ms-3"><i class="fa-solid fa-flag text-danger"></i> VN</span>
+            </div>
         </div>
     </div>
 
     <!-- Main Navigation Bar -->
     <nav class="main-nav sticky-top">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+        <div class="container-fluid px-3 px-md-4 d-flex justify-content-between align-items-center">
             
-            <!-- Logo Brand DK -->
-            <a href="index.html" class="brand-logo-container">
-                <div class="logo-stripes">
-                    <div class="stripe stripe-1"></div>
-                    <div class="stripe stripe-2"></div>
-                    <div class="stripe stripe-3"></div>
-                </div>
-                <span class="brand-text">DK FASHION</span>
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Mobile Menu Toggle Button -->
+                <button class="btn border-0 d-md-none fs-4 p-0 me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
 
-            <!-- Navigation Links -->
+                <!-- Logo Brand DK -->
+                <a href="javascript:void(0)" onclick="switchCategory('NAM')" class="brand-logo-container">
+                    <div class="logo-stripes">
+                        <div class="stripe stripe-1"></div>
+                        <div class="stripe stripe-2"></div>
+                        <div class="stripe stripe-3"></div>
+                    </div>
+                    <span class="brand-text">DK FASHION</span>
+                </a>
+            </div>
+
+            <!-- Navigation Links Desktop -->
             <ul class="nav nav-categories d-none d-md-flex">
-                <!-- ĐÃ SỬA: Bỏ href="nam.html cũ thành # để không bị lỗi 404 trang không tồn tại -->
-                <li class="nav-item"><a class="nav-link" href="#">NAM</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">NỮ</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">TRẺ EM</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">THỂ THAO</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">BỘ SỰ TẬP</a></li>
-                <li class="nav-item"><a class="nav-link text-muted" href="#">OUTLET</a></li>
+                <li class="nav-item"><a class="nav-link active" id="nav-NAM" onclick="switchCategory('NAM')">NAM</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-NU" onclick="switchCategory('NU')">NỮ</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-TREEM" onclick="switchCategory('TREEM')">TRẺ EM</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-THETHAO" onclick="switchCategory('THETHAO')">THỂ THAO</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-BOSUTAP" onclick="switchCategory('BOSUTAP')">BỘ SỰ TẬP</a></li>
+                <li class="nav-item"><a class="nav-link text-muted" id="nav-OUTLET" onclick="switchCategory('OUTLET')">OUTLET</a></li>
             </ul>
 
             <!-- Right Icons & Search -->
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 gap-md-3">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Tìm kiếm..." onkeyup="filterProducts()">
+                    <input type="text" id="searchInput" placeholder="Tìm..." onkeyup="searchProducts()">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
-                <a href="#" class="text-dark fs-5"><i class="fa-regular fa-user"></i></a>
-                <a href="#" class="text-dark fs-5"><i class="fa-regular fa-heart"></i></a>
+                <a href="javascript:void(0)" onclick="openAdminModal()" class="text-dark fs-5"><i class="fa-regular fa-user"></i></a>
                 <button class="bg-transparent border-0 text-dark fs-5 position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer">
                     <i class="fa-solid fa-bag-shopping"></i>
-                    <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-black fs-6" style="font-size: 10px !important;">0</span>
+                    <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger" style="font-size: 10px !important;">0</span>
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content Container -->
-    <main class="container-fluid px-4 mt-3">
+    <main class="container-fluid px-2 px-md-4 mt-3">
         
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb" style="font-size: 12px; font-weight: 600;">
-                <li class="breadcrumb-item"><a href="#" class="text-dark"><i class="fa-solid fa-arrow-left me-1"></i> Trở lại</a></li>
-                <li class="breadcrumb-item"><a href="#" class="text-dark">Trang Chủ</a></li>
-                <li class="breadcrumb-item"><a href="#" class="text-dark">Nữ</a></li>
-                <li class="breadcrumb-item"><a href="#" class="text-dark">Trainers</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Giày</li>
+            <ol class="breadcrumb" style="font-size: 11px; font-weight: 600;">
+                <li class="breadcrumb-item"><a href="#" class="text-dark"><i class="fa-solid fa-arrow-left me-1"></i> Trang Chủ</a></li>
+                <li class="breadcrumb-item active" id="breadcrumbCategory" aria-current="page">NAM</li>
             </ol>
         </nav>
 
-        <!-- Page Header -->
+        <!-- Page Title & Count -->
         <div class="d-flex align-items-baseline mb-2">
-            <h1 class="fw-black display-5 text-uppercase mb-0" style="font-weight: 900; letter-spacing: -1px;">NỮ · TRAINERS · GIÀY</h1>
-            <span class="text-muted ms-3 fw-bold fs-6">1459</span>
+            <h1 class="fw-black display-6 text-uppercase mb-0" id="pageTitle" style="font-weight: 900; letter-spacing: -1px;">THỜI TRANG NAM</h1>
+            <span class="text-muted ms-3 fw-bold fs-6" id="productCount">0 sản phẩm</span>
         </div>
 
         <!-- Sub Categories Scroll Bar -->
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="sub-nav-scroll flex-grow-1">
-                <a href="#" class="sub-nav-item">Hàng mới về</a>
-                <a href="#" class="sub-nav-item active">Giày sneaker</a>
-                <a href="#" class="sub-nav-item">Chạy bộ</a>
-                <a href="#" class="sub-nav-item">Giày tập</a>
-                <a href="#" class="sub-nav-item">Lifestyle</a>
-                <a href="#" class="sub-nav-item">Giày bóng đá</a>
-                <a href="#" class="sub-nav-item">Giày bóng rổ</a>
-                <a href="#" class="sub-nav-item">Giày quần vợt</a>
-                <a href="#" class="sub-nav-item">Ba lê</a>
-                <a href="#" class="sub-nav-item">Dép & Dép xỏ ngón</a>
-                <a href="#" class="sub-nav-item">Giày Golf</a>
+                <a href="#" class="sub-nav-item active">FIFA World Cup 26™ Away kits</a>
+                <a href="#" class="sub-nav-item">FIFA World Cup 26™ Collection ✨</a>
+                <a href="#" class="sub-nav-item">Court sports</a>
+                <a href="#" class="sub-nav-item">Hàng Mới Về ✨</a>
             </div>
             
-            <!-- Filter Button Trigger -->
-            <button class="btn btn-filter ms-3 d-flex align-items-center gap-2" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
-                Lọc & Sắp xếp <i class="fa-solid fa-sliders"></i>
+            <button class="btn btn-filter ms-2" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
+                Lọc <i class="fa-solid fa-sliders ms-1"></i>
             </button>
         </div>
 
-        <!-- Product Grid List -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mt-2" id="productGrid">
-            
-            <!-- Product Item 1 -->
-            <div class="col product-item">
-                <div class="adidas-card">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600" alt="Giày Samba Classic">
-                        <div class="price-tag">2.400.000<sup>đ</sup></div>
-                    </div>
-                    <div class="card-info">
-                        <a href="#" class="product-title">Giày Samba OG Unisex</a>
-                        <div class="product-category">Originals</div>
-                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Samba OG Unisex', 2400000)">Thêm vào giỏ</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 2 -->
-            <div class="col product-item">
-                <div class="adidas-card">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600" alt="Giày Superstar">
-                        <div class="price-tag">2.600.000<sup>đ</sup></div>
-                    </div>
-                    <div class="card-info">
-                        <a href="#" class="product-title">Giày Superstar Mũi Vỏ Sò</a>
-                        <div class="product-category">Originals</div>
-                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Superstar Mũi Vỏ Sò', 2600000)">Thêm vào giỏ</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 3 -->
-            <div class="col product-item">
-                <div class="adidas-card">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="Giày Ultraboost">
-                        <div class="price-tag">4.500.000<sup>đ</sup></div>
-                    </div>
-                    <div class="card-info">
-                        <a href="#" class="product-title">Giày Chạy Bộ Ultraboost Light</a>
-                        <div class="product-category">Chạy bộ</div>
-                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Chạy Bộ Ultraboost Light', 4500000)">Thêm vào giỏ</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 4 -->
-            <div class="col product-item">
-                <div class="adidas-card">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=600" alt="Giày Forum Low">
-                        <div class="price-tag">2.800.000<sup>đ</sup></div>
-                    </div>
-                    <div class="card-info">
-                        <a href="#" class="product-title">Giày Forum Low Classic</a>
-                        <div class="product-category">Lifestyle</div>
-                        <button class="btn btn-sm btn-outline-dark w-100 rounded-0 mt-2" onclick="addToCart('Giày Forum Low Classic', 2800000)">Thêm vào giỏ</button>
-                    </div>
-                </div>
-            </div>
-
+        <!-- Product Grid List (Tự động thích ứng 2 cột trên Mobile / 4 cột Desktop) -->
+        <div class="row g-2 g-md-3" id="productGrid">
+            <!-- Sản phẩm sẽ được render tự động bằng JavaScript ở đây -->
         </div>
     </main>
 
@@ -405,9 +401,117 @@
     <footer class="bg-black text-white mt-5 py-4 border-top">
         <div class="container-fluid px-4 text-center">
             <p class="small mb-1">&copy; 2026 DK FASHION. Tên miền thực tế: <strong>fashionstore.id.vn</strong></p>
-            <p class="small text-muted mb-0">Đồ án môn học - Đại học Văn Hiến (VHU) - Sinh viên: Đoàn Duy Khánh</p>
+            <p class="small text-muted mb-0">Đồ án thiết kế Web - Đại học Văn Hiến (VHU) - Sinh viên: Đoàn Duy Khánh</p>
         </div>
     </footer>
+
+    <!-- Modal Xem Chi Tiết Sản Phẩm (Quick View Modal) -->
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-0 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3 p-md-4">
+                    <div class="row g-4" id="modalProductContent">
+                        <!-- Nội dung sản phẩm đổ vào đây bằng JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quản Trị Admin (Thêm / Sửa / Xóa Sản Phẩm) -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content rounded-0">
+                <div class="modal-header bg-black text-white rounded-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-gear me-2"></i> BẢNG QUẢN TRỊ DÀNH CHO CHỦ SHOP</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form Nhập Sản Phẩm Mới -->
+                    <h6 class="fw-bold border-bottom pb-2">THÊM SẢN PHẨM MỚI VÀO SHOP</h6>
+                    <form id="addProductForm" onsubmit="handleFormSubmit(event)" class="row g-3 mb-4">
+                        <input type="hidden" id="editProductId">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tên sản phẩm</label>
+                            <input type="text" class="form-control rounded-0" id="inputTitle" required placeholder="Ví dụ: Áo Đấu Sân Khách Đức 26">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Danh mục chính</label>
+                            <select class="form-select rounded-0" id="inputCategory">
+                                <option value="NAM">NAM</option>
+                                <option value="NU">NỮ</option>
+                                <option value="TREEM">TRẺ EM</option>
+                                <option value="THETHAO">THỂ THAO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Dòng sản phẩm</label>
+                            <input type="text" class="form-control rounded-0" id="inputSubCategory" placeholder="Performance / Originals">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Giá bán hiện tại (đ)</label>
+                            <input type="number" class="form-control rounded-0" id="inputPrice" required placeholder="1100000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Giá gốc (nếu có giảm giá)</label>
+                            <input type="number" class="form-control rounded-0" id="inputOriginalPrice" placeholder="1900000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Đường dẫn ảnh (URL Image)</label>
+                            <input type="url" class="form-control rounded-0" id="inputImage" required placeholder="https://link-anh.jpg">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Đoạn giới thiệu / Mô tả sản phẩm</label>
+                            <textarea class="form-control rounded-0" id="inputDescription" rows="2" placeholder="Chất liệu cao cấp, thoáng khí..."></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-outline-secondary rounded-0 me-2" onclick="resetAdminForm()">Hủy/Làm mới</button>
+                            <button type="submit" class="btn btn-dark rounded-0 fw-bold" id="btnSubmitAdmin">LƯU SẢN PHẨM</button>
+                        </div>
+                    </form>
+
+                    <!-- Danh Sách Sản Phẩm Đang Có -->
+                    <h6 class="fw-bold border-bottom pb-2">DANH SÁCH SẢN PHẨM ĐANG BÁN</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle table-hover fs-6">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ảnh</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Mục</th>
+                                    <th>Giá bán</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminProductTable">
+                                <!-- Đổ danh sách quản lý vào đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Drawer Navigation -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-black">DK FASHION MENU</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="list-group list-group-flush fw-bold">
+                <a class="list-group-item list-group-item-action py-3" onclick="switchCategory('NAM')" data-bs-dismiss="offcanvas">THỜI TRANG NAM</a>
+                <a class="list-group-item list-group-item-action py-3" onclick="switchCategory('NU')" data-bs-dismiss="offcanvas">THỜI TRANG NỮ</a>
+                <a class="list-group-item list-group-item-action py-3" onclick="switchCategory('TREEM')" data-bs-dismiss="offcanvas">TRẺ EM</a>
+                <a class="list-group-item list-group-item-action py-3" onclick="switchCategory('THETHAO')" data-bs-dismiss="offcanvas">THỂ THAO</a>
+                <a class="list-group-item list-group-item-action py-3 text-warning bg-dark mt-3" onclick="openAdminModal()" data-bs-dismiss="offcanvas"><i class="fa-solid fa-user-gear me-2"></i> QUẢN TRỊ ADMIN</a>
+            </div>
+        </div>
+    </div>
 
     <!-- Cart Drawer Offcanvas -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer">
@@ -416,15 +520,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column justify-content-between">
-            <div id="cartItemsList">
+            <div id="cartItemsList" class="flex-grow-1 overflow-auto">
                 <p class="text-muted text-center my-4">Giỏ hàng đang trống.</p>
             </div>
             <div class="border-top pt-3">
                 <div class="d-flex justify-content-between font-weight-bold mb-3 fs-5">
                     <span>TỔNG CỘNG:</span>
-                    <span id="cartTotal" class="fw-bold">0<sup>đ</sup></span>
+                    <span id="cartTotal" class="fw-bold text-danger">0<sup>đ</sup></span>
                 </div>
-                <button class="btn-black">THANH TOÁN NGAY</button>
+                <button class="btn-black" onclick="alert('Cảm ơn bạn đã đặt hàng tại DK FASHION!')">THANH TOÁN NGAY</button>
             </div>
         </div>
     </div>
@@ -437,10 +541,9 @@
         </div>
         <div class="offcanvas-body">
             <div class="mb-4">
-                <h6 class="fw-bold">SẮP XẾP THEO</h6>
-                <div class="form-check"><input class="form-check-input" type="radio" name="sort" checked> Giá: Thấp đến Cao</div>
-                <div class="form-check"><input class="form-check-input" type="radio" name="sort"> Giá: Cao đến Thấp</div>
-                <div class="form-check"><input class="form-check-input" type="radio" name="sort"> Mới nhất</div>
+                <h6 class="fw-bold">SẮP XẾP THEO GIÁ</h6>
+                <div class="form-check"><input class="form-check-input" type="radio" name="sort" onchange="sortProducts('asc')"> Giá: Thấp đến Cao</div>
+                <div class="form-check"><input class="form-check-input" type="radio" name="sort" onchange="sortProducts('desc')"> Giá: Cao đến Thấp</div>
             </div>
             <button class="btn-black" data-bs-dismiss="offcanvas">ÁP DỤNG</button>
         </div>
@@ -449,15 +552,208 @@
     <!-- Bootstrap & Custom JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let cart = [];
+        // 1. DỮ LIỆU SẢN PHẨM MẶC ĐỊNH (Khắc phục hoàn toàn lỗi sai ảnh / sai thông tin)
+        const initialProducts = [
+            {
+                id: "sp-001",
+                mainCategory: "NAM",
+                subCategory: "Performance • Quần thể thao nam",
+                title: "Quần Short Sân Khách Đội Tuyển Nhật Bản 26",
+                price: 1100000,
+                originalPrice: null,
+                image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600",
+                description: "Quần short chính hãng thiết kế đồng bộ với bộ đồ sân khách của đội tuyển Nhật Bản 26. Chất liệu vải cao cấp co giãn 4 chiều, công nghệ hút ẩm AEROREADY giúp giữ cảm giác khô ráo suốt vận động."
+            },
+            {
+                id: "sp-002",
+                mainCategory: "NAM",
+                subCategory: "Performance • Áo đấu bóng đá",
+                title: "Áo Đấu Sân Khách Đội Tuyển Đức 26 Phiên Bản Authentic",
+                price: 1800000,
+                originalPrice: 3000000,
+                image: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600",
+                description: "Áo đấu tuyển Đức phong cách mạnh mẽ. Vải thoáng khí tối đa, logo in nhiệt nổi bật, thích hợp cho các trận thi đấu cường độ cao."
+            },
+            {
+                id: "sp-003",
+                mainCategory: "NAM",
+                subCategory: "Performance • Quần short nam",
+                title: "Quần Short Sân Khách Đội Tuyển Đức 26",
+                price: 660000,
+                originalPrice: 1100000,
+                image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600",
+                description: "Quần short tập luyện chất liệu siêu nhẹ, cạp chun có dây rút điều chỉnh dễ dàng."
+            },
+            {
+                id: "sp-004",
+                mainCategory: "NAM",
+                subCategory: "Performance • Áo thể thao nam",
+                title: "Áo Đấu Sân Khách Dáng Lửng Đội Tuyển Ý 26",
+                price: 1140000,
+                originalPrice: 1900000,
+                image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=600",
+                description: "Thiết kế thời trang thể thao phá cách mang đậm phong cách Ý."
+            },
+            {
+                id: "sp-005",
+                mainCategory: "NAM",
+                subCategory: "Originals • Giày thể thao",
+                title: "Giày Sneaker Nam Sport Performance",
+                price: 2400000,
+                originalPrice: null,
+                image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+                description: "Mẫu giày chạy bộ đệm Boost siêu mượt, bám đường cực tốt trên mọi địa hình."
+            },
+            {
+                id: "sp-006",
+                mainCategory: "NU",
+                subCategory: "Originals • Giày nữ",
+                title: "Giày Samba OG Unisex Pastel",
+                price: 2400000,
+                originalPrice: null,
+                image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600",
+                description: "Biểu tượng thời trang đường phố Adidas Samba với phối màu pastel trẻ trung."
+            }
+        ];
 
-        function addToCart(title, price) {
-            cart.push({ title, price });
+        // Khởi tạo dữ liệu từ LocalStorage hoặc dữ liệu mẫu
+        let products = JSON.parse(localStorage.getItem('DK_PRODUCTS')) || initialProducts;
+        let cart = JSON.parse(localStorage.getItem('DK_CART')) || [];
+        let currentCategory = 'NAM';
+        let selectedSize = 'M';
+
+        // Lưu vào LocalStorage
+        function saveProductsToStorage() {
+            localStorage.setItem('DK_PRODUCTS', JSON.stringify(products));
+        }
+        function saveCartToStorage() {
+            localStorage.setItem('DK_CART', JSON.stringify(cart));
+        }
+
+        // Đổi danh mục trang (NAM / NỮ / TRẺ EM / THỂ THAO)
+        function switchCategory(cat) {
+            currentCategory = cat;
+            
+            // Cập nhật Active tab
+            document.querySelectorAll('.nav-categories .nav-link').forEach(el => el.classList.remove('active'));
+            const activeNav = document.getElementById(`nav-${cat}`);
+            if(activeNav) activeNav.classList.add('active');
+
+            // Cập nhật tiêu đề & Breadcrumb
+            document.getElementById('breadcrumbCategory').innerText = cat;
+            document.getElementById('pageTitle').innerText = cat === 'NAM' ? 'THỜI TRANG NAM' : (cat === 'NU' ? 'THỜI TRANG NỮ' : `DANH MỤC ${cat}`);
+
+            renderProducts();
+        }
+
+        // Render danh sách sản phẩm ra màn hình
+        function renderProducts(filteredList = null) {
+            const list = filteredList || products.filter(p => p.mainCategory === currentCategory);
+            const grid = document.getElementById('productGrid');
+            document.getElementById('productCount').innerText = `${list.length} sản phẩm`;
+
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="col-12 text-center py-5"><p class="text-muted">Chưa có sản phẩm nào trong mục này.</p></div>`;
+                return;
+            }
+
+            let html = '';
+            list.forEach(p => {
+                const discountPercent = p.originalPrice ? Math.round((1 - p.price / p.originalPrice) * 100) : 0;
+                
+                html += `
+                    <div class="col-6 col-md-4 col-lg-3 product-col">
+                        <div class="adidas-card" onclick="openProductDetail('${p.id}')">
+                            <div class="img-wrapper">
+                                <button class="wishlist-btn" onclick="event.stopPropagation()"><i class="fa-regular fa-heart"></i></button>
+                                <img src="${p.image}" alt="${p.title}" onerror="this.src='https://via.placeholder.com/600x600?text=DK+Fashion'">
+                                ${discountPercent > 0 ? `<div class="discount-badge">-\${discountPercent}%</div>` : ''}
+                            </div>
+                            <div class="card-info">
+                                <div class="price-container">
+                                    <span class="current-price">${p.price.toLocaleString('vi-VN')}<sup>đ</sup></span>
+                                    ${p.originalPrice ? `<span class="original-price">\${p.originalPrice.toLocaleString('vi-VN')}<sup>đ</sup></span>` : ''}
+                                </div>
+                                <div class="product-title">${p.title}</div>
+                                <div class="product-category">${p.subCategory || 'Performance'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        // Mở Pop-up xem chi tiết sản phẩm chuẩn
+        function openProductDetail(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+
+            const modalContent = document.getElementById('modalProductContent');
+            modalContent.innerHTML = `
+                <div class="col-md-6">
+                    <img src="${p.image}" class="img-fluid w-100" style="aspect-ratio: 1; object-fit: cover;" alt="${p.title}">
+                </div>
+                <div class="col-md-6 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase">${p.subCategory || 'Performance'}</div>
+                        <h3 class="fw-black mt-1 mb-2">${p.title}</h3>
+                        <p class="text-muted small">${p.description || 'Chất liệu cao cấp, mang lại sự thoải mái tối đa cho người mặc.'}</p>
+                        
+                        <div class="my-3">
+                            <span class="fs-3 fw-black text-danger">${p.price.toLocaleString('vi-VN')}<sup>đ</sup></span>
+                            ${p.originalPrice ? `<span class="text-muted text-decoration-line-through ms-2">\${p.originalPrice.toLocaleString('vi-VN')}<sup>đ</sup></span>` : ''}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="fw-bold small mb-2">CHỌN KÍCH CỠ:</div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-size active" onclick="selectSize(this, 'S')">S</button>
+                                <button class="btn btn-size" onclick="selectSize(this, 'M')">M</button>
+                                <button class="btn btn-size" onclick="selectSize(this, 'L')">L</button>
+                                <button class="btn btn-size" onclick="selectSize(this, 'XL')">XL</button>
+                                <button class="btn btn-size" onclick="selectSize(this, '2XL')">2XL</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button class="btn-black py-3 mb-2" onclick="addToCart('${p.id}')">THÊM VÀO GIỎ HÀNG</button>
+                        <div class="small text-muted"><i class="fa-solid fa-truck-fast me-1"></i> Miễn phí vận chuyển cho thành viên | Trả hàng trong 30 ngày</div>
+                    </div>
+                </div>
+            `;
+
+            let modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            modal.show();
+        }
+
+        function selectSize(btn, size) {
+            document.querySelectorAll('.btn-size').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedSize = size;
+        }
+
+        // Thêm vào giỏ hàng
+        function addToCart(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+
+            cart.push({ ...p, size: selectedSize });
+            saveCartToStorage();
             updateCartUI();
+
+            // Đóng Modal chi tiết nếu đang mở & mở Drawer Giỏ hàng
+            const modalEl = document.getElementById('productDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
             let cartDrawer = new bootstrap.Offcanvas(document.getElementById('cartDrawer'));
             cartDrawer.show();
         }
 
+        // Cập nhật giao diện giỏ hàng
         function updateCartUI() {
             document.getElementById('cartBadge').innerText = cart.length;
             let listHtml = '';
@@ -467,11 +763,12 @@
                 total += item.price;
                 listHtml += `
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                        <div>
-                            <div class="fw-bold fs-6">${item.title}</div>
-                            <div class="text-muted small">${item.price.toLocaleString('vi-VN')} đ</div>
+                        <img src="${item.image}" style="width: 50px; height: 50px; object-fit: cover;" class="me-2">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold small text-truncate" style="max-width: 150px;">${item.title}</div>
+                            <div class="text-muted extra-small">Size: ${item.size || 'M'} | ${item.price.toLocaleString('vi-VN')} đ</div>
                         </div>
-                        <button class="btn btn-sm text-danger" onclick="removeFromCart(${index})"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-sm text-danger border-0" onclick="removeFromCart(${index})"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
             });
@@ -482,22 +779,131 @@
 
         function removeFromCart(index) {
             cart.splice(index, 1);
+            saveCartToStorage();
             updateCartUI();
         }
 
-        function filterProducts() {
+        // Tìm kiếm sản phẩm
+        function searchProducts() {
             let input = document.getElementById('searchInput').value.toLowerCase();
-            let items = document.getElementsByClassName('product-item');
+            let matches = products.filter(p => p.title.toLowerCase().includes(input) && p.mainCategory === currentCategory);
+            renderProducts(matches);
+        }
 
-            for (let item of items) {
-                let title = item.querySelector('.product-title').innerText.toLowerCase();
-                if (title.includes(input)) {
-                    item.style.display = "";
-                } else {
-                    item.style.display = "none";
-                }
+        // Sắp xếp sản phẩm
+        function sortProducts(type) {
+            let sorted = [...products.filter(p => p.mainCategory === currentCategory)];
+            if(type === 'asc') sorted.sort((a,b) => a.price - b.price);
+            if(type === 'desc') sorted.sort((a,b) => b.price - a.price);
+            renderProducts(sorted);
+        }
+
+        // --- BẢNG QUẢN TRỊ ADMIN (THÊM / SỬA / XÓA) ---
+        function openAdminModal() {
+            let pwd = prompt("Nhập mật khẩu quản trị Admin:");
+            if (pwd === '123456' || pwd === 'admin') {
+                renderAdminTable();
+                let modal = new bootstrap.Modal(document.getElementById('adminModal'));
+                modal.show();
+            } else if (pwd !== null) {
+                alert("Mật khẩu không đúng!");
             }
         }
+
+        function renderAdminTable() {
+            let tbody = document.getElementById('adminProductTable');
+            let html = '';
+            products.forEach(p => {
+                html += `
+                    <tr>
+                        <td><img src="${p.image}" style="width:40px; height:40px; object-fit:cover;"></td>
+                        <td class="fw-bold small">${p.title}</td>
+                        <td><span class="badge bg-secondary">${p.mainCategory}</span></td>
+                        <td class="text-danger fw-bold">${p.price.toLocaleString('vi-VN')}đ</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            let editId = document.getElementById('editProductId').value;
+            let title = document.getElementById('inputTitle').value;
+            let mainCategory = document.getElementById('inputCategory').value;
+            let subCategory = document.getElementById('inputSubCategory').value;
+            let price = parseInt(document.getElementById('inputPrice').value);
+            let originalPrice = document.getElementById('inputOriginalPrice').value ? parseInt(document.getElementById('inputOriginalPrice').value) : null;
+            let image = document.getElementById('inputImage').value;
+            let description = document.getElementById('inputDescription').value;
+
+            if (editId) {
+                // Sửa sản phẩm
+                let p = products.find(item => item.id === editId);
+                if (p) {
+                    p.title = title;
+                    p.mainCategory = mainCategory;
+                    p.subCategory = subCategory;
+                    p.price = price;
+                    p.originalPrice = originalPrice;
+                    p.image = image;
+                    p.description = description;
+                }
+            } else {
+                // Thêm sản phẩm mới
+                let newObj = {
+                    id: 'sp-' + Date.now(),
+                    mainCategory, subCategory, title, price, originalPrice, image, description
+                };
+                products.push(newObj);
+            }
+
+            saveProductsToStorage();
+            renderAdminTable();
+            renderProducts();
+            resetAdminForm();
+            alert("Đã lưu thông tin sản phẩm thành công!");
+        }
+
+        function editProduct(id) {
+            let p = products.find(item => item.id === id);
+            if (!p) return;
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('inputTitle').value = p.title;
+            document.getElementById('inputCategory').value = p.mainCategory;
+            document.getElementById('inputSubCategory').value = p.subCategory || '';
+            document.getElementById('inputPrice').value = p.price;
+            document.getElementById('inputOriginalPrice').value = p.originalPrice || '';
+            document.getElementById('inputImage').value = p.image;
+            document.getElementById('inputDescription').value = p.description || '';
+            document.getElementById('btnSubmitAdmin').innerText = "CẬP NHẬT SẢN PHẨM";
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
+                products = products.filter(item => item.id !== id);
+                saveProductsToStorage();
+                renderAdminTable();
+                renderProducts();
+            }
+        }
+
+        function resetAdminForm() {
+            document.getElementById('addProductForm').reset();
+            document.getElementById('editProductId').value = '';
+            document.getElementById('btnSubmitAdmin').innerText = "LƯU SẢN PHẨM";
+        }
+
+        // Khởi chạy khi load trang
+        window.onload = function() {
+            saveProductsToStorage();
+            renderProducts();
+            updateCartUI();
+        };
     </script>
 </body>
 </html>
