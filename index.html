@@ -378,12 +378,12 @@
         </div>
 
         <!-- Sub Categories Scroll Bar -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="sub-nav-scroll flex-grow-1">
-                <a href="#" class="sub-nav-item active">FIFA World Cup 26™ Away kits</a>
-                <a href="#" class="sub-nav-item">FIFA World Cup 26™ Collection ✨</a>
-                <a href="#" class="sub-nav-item">Court sports</a>
-                <a href="#" class="sub-nav-item">Hàng Mới Về ✨</a>
+       <div class="sub-nav-scroll flex-grow-1" id="subCategoryFilter">
+                <a href="javascript:void(0)" class="sub-nav-item active" onclick="filterBySubCategory('Tất cả', this)">Tất cả</a>
+                <a href="javascript:void(0)" class="sub-nav-item" onclick="filterBySubCategory('Quần', this)">Quần</a>
+                <a href="javascript:void(0)" class="sub-nav-item" onclick="filterBySubCategory('Áo', this)">Áo</a>
+                <a href="javascript:void(0)" class="sub-nav-item" onclick="filterBySubCategory('Giày', this)">Giày</a>
+                <a href="javascript:void(0)" class="sub-nav-item" onclick="filterBySubCategory('Dép', this)">Dép</a>
             </div>
             
             <button class="btn btn-filter ms-2" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
