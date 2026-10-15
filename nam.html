@@ -90,7 +90,7 @@
             border-bottom: 2px solid #000;
         }
 
-        /* Sub Category Filter Tags (Pills) giốg mẫu */
+        /* Filter Bar & Tags */
         .filter-bar-container {
             display: flex;
             align-items: center;
@@ -122,14 +122,6 @@
         .filter-tag-pill:hover, .filter-tag-pill.active {
             background-color: #000;
             color: #fff;
-        }
-        .see-more-link {
-            font-weight: 700;
-            font-size: 13px;
-            color: #000;
-            text-decoration: underline;
-            white-space: nowrap;
-            margin-left: 20px;
         }
 
         /* Product Card Styling */
@@ -170,8 +162,6 @@
             z-index: 2;
             color: #000;
         }
-        
-        /* Badges */
         .badge-discount {
             position: absolute;
             bottom: 10px;
@@ -235,7 +225,6 @@
     <nav class="main-nav sticky-top">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
             
-            <!-- Logo Brand DK -->
             <a href="index.html" class="brand-logo-container">
                 <div class="logo-stripes">
                     <div class="stripe stripe-1"></div>
@@ -245,7 +234,6 @@
                 <span class="brand-text">DK FASHION</span>
             </a>
 
-            <!-- Navigation Links -->
             <ul class="nav nav-categories d-none d-md-flex">
                 <li class="nav-item"><a class="nav-link active" href="nam.html">NAM</a></li>
                 <li class="nav-item"><a class="nav-link" href="index.html">NỮ</a></li>
@@ -255,7 +243,6 @@
                 <li class="nav-item"><a class="nav-link text-muted" href="#">OUTLET</a></li>
             </ul>
 
-            <!-- Right Navigation -->
             <div class="d-flex align-items-center gap-3">
                 <a href="index.html" class="btn btn-outline-dark btn-sm rounded-0 fw-bold px-3"><i class="fa-solid fa-arrow-left me-1"></i> Trang chủ</a>
             </div>
@@ -273,7 +260,7 @@
             </ol>
         </nav>
 
-        <!-- Filter Bar & Tags giống mẫu hình ảnh -->
+        <!-- Filter Bar & Tags -->
         <div class="filter-bar-container">
             <div class="filter-tags-scroll">
                 <a href="#" class="filter-tag-pill active">FIFA World Cup 26™ Away kits</a>
@@ -281,107 +268,16 @@
                 <a href="#" class="filter-tag-pill">Court sports</a>
                 <a href="#" class="filter-tag-pill">Hàng Mới Về ✨</a>
             </div>
-            <a href="#" class="see-more-link">Xem Thêm</a>
+            <a href="#" class="text-dark fw-bold text-decoration-underline small">Xem Thêm</a>
         </div>
 
-        <!-- Product Grid List -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
-            
-            <!-- Product Item 1 -->
-            <div class="col">
-                <div class="adidas-card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600" alt="Quần Short Sân Khách">
-                    </div>
-                    <div class="card-info">
-                        <div class="product-price-box">
-                            <span class="current-price">1.100.000<sup>đ</sup></span>
-                        </div>
-                        <a href="#" class="product-title">Quần Short Sân Khách Đội Tuyển Nhật Bản 26</a>
-                        <div class="product-category">Performance</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 2 -->
-            <div class="col">
-                <div class="adidas-card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600" alt="Áo Đấu Đức">
-                        <span class="badge-discount">-40%</span>
-                    </div>
-                    <div class="card-info">
-                        <div class="product-price-box">
-                            <span class="current-price">1.800.000<sup>đ</sup></span>
-                            <span class="original-price">3.000.000<sup>đ</sup></span>
-                        </div>
-                        <a href="#" class="product-title">Áo Đấu Sân Khách Đội Tuyển Đức 26 Phiên Bản Authentic</a>
-                        <div class="product-category">Performance</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 3 -->
-            <div class="col">
-                <div class="adidas-card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600" alt="Quần Short Xanh">
-                        <span class="badge-discount">-40%</span>
-                    </div>
-                    <div class="card-info">
-                        <div class="product-price-box">
-                            <span class="current-price">660.000<sup>đ</sup></span>
-                            <span class="original-price">1.100.000<sup>đ</sup></span>
-                        </div>
-                        <a href="#" class="product-title">Quần Short Sân Khách Đội Tuyển Đức 26</a>
-                        <div class="product-category">Performance</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 4 -->
-            <div class="col">
-                <div class="adidas-card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600" alt="Áo Dáng Lửng">
-                        <span class="badge-discount">-40%</span>
-                    </div>
-                    <div class="card-info">
-                        <div class="product-price-box">
-                            <span class="current-price">1.140.000<sup>đ</sup></span>
-                            <span class="original-price">1.900.000<sup>đ</sup></span>
-                        </div>
-                        <a href="#" class="product-title">Áo Đấu Sân Khách Dáng Lửng Đội Tuyển Ý 26</a>
-                        <div class="product-category">Performance</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product Item 5 -->
-            <div class="col">
-                <div class="adidas-card" data-bs-toggle="modal" data-bs-target="#productDetailModal">
-                    <div class="img-wrapper">
-                        <button class="wishlist-btn"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="Giày Thể Thao">
-                    </div>
-                    <div class="card-info">
-                        <div class="product-price-box">
-                            <span class="current-price">2.400.000<sup>đ</sup></span>
-                        </div>
-                        <a href="#" class="product-title">Giày Sneaker Nam Sport Performance</a>
-                        <div class="product-category">Originals</div>
-                    </div>
-                </div>
-            </div>
-
+        <!-- Product Grid Container (Được render tự động bằng JavaScript) -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3" id="productGridNam">
+            <!-- Dữ liệu sản phẩm được đổ tự động ở đây -->
         </div>
     </main>
 
-    <!-- Modal Chi Tiết Sản Phẩm (Mô phỏng giống hình 13 & 14 khi bấm vào sản phẩm) -->
+    <!-- Modal Chi Tiết Sản Phẩm (Hiển thị đúng 100% theo ID sản phẩm được click) -->
     <div class="modal fade" id="productDetailModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content rounded-0 border-0">
@@ -392,30 +288,31 @@
                     <div class="row">
                         <div class="col-md-7">
                             <div class="bg-light p-3 text-center mb-3">
-                                <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800" class="img-fluid" alt="Chi tiết sản phẩm">
+                                <img id="modalImg" src="" class="img-fluid" alt="Chi tiết sản phẩm" style="max-height: 450px; object-fit: contain;">
                             </div>
                         </div>
                         <div class="col-md-5">
-                            <span class="text-muted small fw-bold">Nam • Bóng đá</span>
-                            <h2 class="fw-black fs-4 mt-1 mb-2">ÁO ĐẤU SÂN KHÁCH ĐỘI TUYỂN ĐỨC 26 PHIÊN BẢN AUTHENTIC</h2>
-                            <p class="small text-muted mb-3">Áo đấu dáng ôm tích hợp công nghệ Climacool+ giúp bạn luôn mát mẻ và khô ráo trên sân cỏ.</p>
+                            <span id="modalCategory" class="text-muted small fw-bold"></span>
+                            <h2 id="modalTitle" class="fw-black fs-4 mt-1 mb-2"></h2>
+                            <p id="modalDesc" class="small text-muted mb-3"></p>
                             
                             <div class="mb-3">
-                                <span class="fs-4 fw-bold text-danger">1.800.000<sup>đ</sup></span>
-                                <span class="text-muted text-decoration-line-through ms-2">3.000.000<sup>đ</sup> Giá gốc -40%</span>
+                                <span id="modalPrice" class="fs-4 fw-bold text-danger"></span>
+                                <span id="modalOriginalPrice" class="text-muted text-decoration-line-through ms-2 small"></span>
                             </div>
 
                             <div class="mb-3">
-                                <label class="fw-bold small mb-2">KÍCH CỠ:</label>
+                                <label class="fw-bold small mb-2">CHỌN KÍCH CỠ:</label>
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-outline-dark rounded-0 btn-sm px-3">S</button>
                                     <button class="btn btn-outline-dark rounded-0 btn-sm px-3">M</button>
                                     <button class="btn btn-outline-dark rounded-0 btn-sm px-3">L</button>
                                     <button class="btn btn-outline-dark rounded-0 btn-sm px-3">XL</button>
+                                    <button class="btn btn-outline-dark rounded-0 btn-sm px-3">2XL</button>
                                 </div>
                             </div>
 
-                            <button class="btn btn-dark w-100 rounded-0 py-3 fw-bold mb-3">THÊM VÀO GIỎ HÀNG</button>
+                            <button class="btn btn-dark w-100 rounded-0 py-3 fw-bold mb-3" onclick="alert('Đã thêm sản phẩm vào giỏ hàng thành công!')">THÊM VÀO GIỎ HÀNG</button>
                             
                             <div class="border-top pt-3 small text-muted">
                                 <p class="mb-1"><i class="fa-solid fa-truck me-2"></i> Miễn phí vận chuyển cho thành viên adiclub</p>
@@ -438,5 +335,138 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- KHO DỮ LIỆU SẢN PHẨM & LOGIC JAVASCRIPT -->
+    <script>
+        /* 
+          ========================================================================
+          HƯỚNG DẪN TÙY CHỈNH DỮ LIỆU (DATA-DRIVEN):
+          - Bạn có thể dễ dàng thay đổi giá (price), giá gốc (originalPrice), % giảm giá (discount)
+          - Thay link ảnh trực tiếp tại thuộc tính `image`.
+          - Viết thêm đoạn giới thiệu chi tiết tại thuộc tính `description`.
+          - Thêm sản phẩm mới bằng cách bổ sung thêm một khối {} vào mảng `productsNam`.
+          ========================================================================
+        */
+        const productsNam = [
+            {
+                id: "sp-001",
+                title: "Quần Short Sân Khách Đội Tuyển Nhật Bản 26",
+                category: "Performance • Quần thể thao nam",
+                price: 1100000,
+                originalPrice: 0,
+                discount: 0,
+                image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600",
+                description: "Quần short chính hãng thiết kế đồng bộ với bộ đồ sân khách của đội tuyển Nhật Bản 26. Chất liệu vải cao cấp co giãn 4 chiều, công nghệ hút ẩm AEROREADY giúp giữ cảm giác khô ráo suốt vận động."
+            },
+            {
+                id: "sp-002",
+                title: "Áo Đấu Sân Khách Đội Tuyển Đức 26 Phiên Bản Authentic",
+                category: "Performance • Áo đấu bóng đá",
+                price: 1800000,
+                originalPrice: 3000000,
+                discount: 40,
+                image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600",
+                description: "Áo đấu dáng ôm cao cấp tích hợp công nghệ Climacool+ độc quyền. Đem lại sự thông thoáng tuyệt đối, biểu tượng tự hào của bóng đá Đức trên sân cỏ quốc tế."
+            },
+            {
+                id: "sp-003",
+                title: "Quần Short Sân Khách Đội Tuyển Đức 26",
+                category: "Performance • Quần short nam",
+                price: 660000,
+                originalPrice: 1100000,
+                discount: 40,
+                image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600",
+                description: "Quần short thể thao nam màu xanh ngọc độc đáo, cạp chun co giãn ôm vừa vặn, thích hợp cho cả tập luyện thể hình lẫn thi đấu bóng đá."
+            },
+            {
+                id: "sp-004",
+                title: "Áo Đấu Sân Khách Dáng Lửng Đội Tuyển Ý 26",
+                category: "Performance • Áo thể thao nam",
+                price: 1140000,
+                originalPrice: 1900000,
+                discount: 40,
+                image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600",
+                description: "Thiết kế cách tân mạnh mẽ mang hơi thở thời trang Ý hiện đại, chất liệu vải siêu nhẹ thoáng khí, tôn dáng thể thao nam tính."
+            },
+            {
+                id: "sp-005",
+                title: "Giày Sneaker Nam Sport Performance",
+                category: "Originals • Giày thể thao",
+                price: 2400000,
+                originalPrice: 0,
+                discount: 0,
+                image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+                description: "Đôi giày thể thao đa năng với lớp đệm êm ái, đế cao su chống trượt bền bỉ, giúp bạn tự tin bước đi suốt cả ngày dài."
+            }
+        ];
+
+        // Hàm render tự động mảng sản phẩm ra giao diện HTML
+        function renderProducts() {
+            const gridContainer = document.getElementById('productGridNam');
+            let htmlContent = '';
+
+            productsNam.forEach(product => {
+                let priceHtml = `<span class="current-price">${product.price.toLocaleString('vi-VN')}<sup>đ</sup></span>`;
+                let badgeHtml = '';
+
+                if (product.originalPrice > 0) {
+                    priceHtml = `
+                        <span class="current-price">${product.price.toLocaleString('vi-VN')}<sup>đ</sup></span>
+                        <span class="original-price">${product.originalPrice.toLocaleString('vi-VN')}<sup>đ</sup></span>
+                    `;
+                }
+                if (product.discount > 0) {
+                    badgeHtml = `<span class="badge-discount">-${product.discount}%</span>`;
+                }
+
+                htmlContent += `
+                    <div class="col">
+                        <div class="adidas-card" onclick="viewProductDetail('${product.id}')">
+                            <div class="img-wrapper">
+                                <button class="wishlist-btn" onclick="event.stopPropagation(); alert('Đã thêm vào danh sách yêu thích!');"><i class="fa-regular fa-heart"></i></button>
+                                <img src="${product.image}" alt="${product.title}">
+                                ${badgeHtml}
+                            </div>
+                            <div class="card-info">
+                                <div class="product-price-box">
+                                    ${priceHtml}
+                                </div>
+                                <a href="javascript:void(0);" class="product-title">${product.title}</a>
+                                <div class="product-category">${product.category}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            gridContainer.innerHTML = htmlContent;
+        }
+
+        // Hàm xử lý khi bấm vào sản phẩm -> Tìm chính xác ID và đổ vào Modal xem nhanh
+        function viewProductDetail(productId) {
+            const product = productsNam.find(p => p.id === productId);
+            if (!product) return;
+
+            // Gán dữ liệu chính xác vào Modal
+            document.getElementById('modalImg').src = product.image;
+            document.getElementById('modalCategory').innerText = product.category;
+            document.getElementById('modalTitle').innerText = product.title;
+            document.getElementById('modalDesc').innerText = product.description;
+            document.getElementById('modalPrice').innerHTML = `${product.price.toLocaleString('vi-VN')}<sup>đ</sup>`;
+            
+            if (product.originalPrice > 0) {
+                document.getElementById('modalOriginalPrice').innerText = `${product.originalPrice.toLocaleString('vi-VN')}đ Giá gốc -${product.discount}%`;
+            } else {
+                document.getElementById('modalOriginalPrice').innerText = '';
+            }
+
+            // Bật Modal hiển thị
+            let myModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            myModal.show();
+        }
+
+        // Chạy hàm render khi tải trang
+        document.addEventListener('DOMContentLoaded', renderProducts);
+    </script>
 </body>
 </html>
