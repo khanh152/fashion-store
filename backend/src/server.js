@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -7,9 +8,13 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import pg from 'pg';
 import { z } from 'zod';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const { Pool } = pg;
 const app = express();
+
+const backendDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -160,10 +165,20 @@ function fail(res, e) {
 
 /*
 |--------------------------------------------------------------------------
+| ADMIN PAGE
+|--------------------------------------------------------------------------
+| Mở trang quản trị:
+| https://fashion-store-in8c.onrender.com/admin.html
+*/
+
+app.get('/admin.html', (_req, res) => {
+  res.sendFile(join(backendDir, 'admin.html'));
+});
+
+/*
+|--------------------------------------------------------------------------
 | HEALTH CHECK
 |--------------------------------------------------------------------------
-| Đã bổ sung log lỗi kết nối database.
-| Khi /health trả về { ok: false }, hãy xem Render Logs.
 */
 
 app.get('/health', async (_q, s) => {
