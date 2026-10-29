@@ -429,13 +429,10 @@
                 <div class="form-check"><input class="form-check-input" type="radio" name="sort" value="default" checked> Nổi bật</div>
                 <div class="form-check"><input class="form-check-input" type="radio" name="sort" value="price-asc"> Giá: Thấp đến Cao</div>
                 <div class="form-check"><input class="form-check-input" type="radio" name="sort" value="price-desc"> Giá: Cao đến Thấp</div>
-                <div class="form-check"><input class="form-check-input" type="radio" name="sort" value="price-desc"> Giá: Cao đến Thấp</div>
             </div>
             <button class="btn-black" data-bs-dismiss="offcanvas" onclick="applySort()">ÁP DỤNG</button>
         </div>
     </div>
-
-
 
     <!-- Product detail modal -->
     <div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="detailTitle" aria-hidden="true">
@@ -443,6 +440,7 @@
         <div class="modal-body pt-0"><div class="row g-4"><div class="col-md-6"><img id="detailImage" class="detail-image" src="" alt="Ảnh sản phẩm"></div><div class="col-md-6"><div class="small text-muted mb-2" id="detailCategory"></div><h2 class="fw-bold" id="detailTitle"></h2><div class="my-3"><strong class="fs-5" id="detailPrice"></strong><span id="detailOldPrice" class="old-price"></span></div><p id="detailDescription" class="text-muted"></p><div class="fw-bold small mb-2">CHỌN KÍCH CỠ</div><div class="d-flex flex-wrap gap-2 mb-4" id="detailSizes"><button class="detail-size active" type="button">36</button><button class="detail-size" type="button">37</button><button class="detail-size" type="button">38</button><button class="detail-size" type="button">39</button><button class="detail-size" type="button">40</button><button class="detail-size" type="button">41</button><button class="detail-size" type="button">42</button><button class="detail-size" type="button">43</button></div><button class="btn-black mb-2" id="detailAddButton" type="button">THÊM VÀO GIỎ HÀNG</button><button class="btn btn-outline-dark rounded-0 w-100 py-2" id="detailWishlistButton" type="button"><i class="fa-regular fa-heart me-2"></i>THÊM VÀO YÊU THÍCH</button><p class="small text-muted mt-3 mb-0"><i class="fa-solid fa-truck me-2"></i>Thanh toán khi nhận hàng (COD) đang được hỗ trợ ở giai đoạn thử nghiệm.</p></div></div></div>
       </div></div>
     </div>
+    
     <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-0"><div class="modal-header"><h5 class="modal-title fw-bold" id="infoTitle">Thông tin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body" id="infoBody"></div><div class="modal-footer"><button class="btn btn-dark rounded-0" data-bs-dismiss="modal">ĐÓNG</button></div></div></div></div>
 
     <!-- Checkout Modal: giao diện đặt hàng COD -->
@@ -557,7 +555,74 @@
       function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;activeProduct=p;selectedSize='36';document.getElementById('detailImage').src=p.image;document.getElementById('detailImage').alt=p.title;document.getElementById('detailCategory').textContent=`${p.category} · ${p.audience}`;document.getElementById('detailTitle').textContent=p.title;document.getElementById('detailPrice').textContent=formatPrice(p.price);document.getElementById('detailOldPrice').textContent=p.oldPrice?formatPrice(p.oldPrice):'';document.getElementById('detailDescription').textContent=p.description;document.querySelectorAll('#detailSizes .detail-size').forEach(b=>b.classList.toggle('active',b.textContent===selectedSize));updateDetailWishlist();bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailModal')).show();}
       function updateDetailWishlist(){const b=document.getElementById('detailWishlistButton');if(!activeProduct)return;const saved=wishlist.has(activeProduct.id);b.innerHTML=`<i class="${saved?'fa-solid fa-heart text-danger':'fa-regular fa-heart'} me-2"></i>${saved?'ĐÃ LƯU YÊU THÍCH':'THÊM VÀO YÊU THÍCH'}`;}
       function showInfo(title,body){document.getElementById('infoTitle').textContent=title;document.getElementById('infoBody').textContent=body;bootstrap.Modal.getOrCreateInstance(document.getElementById('infoModal')).show();}
-      function showAccountInfo(){showInfo('TÀI KHOẢN','Chức năng đăng nhập và quản lý tài khoản chưa được bật. Hiện tại bạn vẫn có thể duyệt sản phẩm và đặt hàng COD khi backend được cấu hình.');}
+      
+      // THAY THẾ HÀM SHOWACCOUNTINFO BẰNG FORM ĐĂNG NHẬP THẬT
+      function showAccountInfo() {
+          const currentUser = JSON.parse(localStorage.getItem('user'));
+
+          if (currentUser) {
+              if (currentUser.role === 'admin') {
+                  if (confirm(`Chào Admin ${currentUser.name}! Bạn có muốn vào trang quản trị không?`)) {
+                      window.location.href = '/backend/admin.html';
+                  }
+              } else {
+                  if (confirm(`Bạn đang đăng nhập là: ${currentUser.name}. Bạn có muốn đăng xuất không?`)) {
+                      localStorage.removeItem('user');
+                      window.location.reload();
+                  }
+              }
+          } else {
+              let existingModal = document.getElementById('customLoginModal');
+              if (existingModal) existingModal.remove();
+
+              let loginHTML = `
+                  <div id="customLoginModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+                      <div style="background: #fff; padding: 30px; border-radius: 8px; width: 350px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                          <span onclick="document.getElementById('customLoginModal').remove()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 22px; font-weight: bold;">&times;</span>
+                          <h3 style="margin-bottom: 20px; text-align: center; font-family: sans-serif;">ĐĂNG NHẬP HỆ THỐNG</h3>
+                          <form id="realLoginForm">
+                              <input type="email" id="emailInput" placeholder="Nhập Email" required style="width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+                              <input type="password" id="passwordInput" placeholder="Nhập Mật khẩu" required style="width: 100%; margin-bottom: 15px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+                              <button type="submit" style="width: 100%; padding: 10px; background: #000; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">ĐĂNG NHẬP</button>
+                          </form>
+                      </div>
+                  </div>
+              `;
+              document.body.insertAdjacentHTML('beforeend', loginHTML);
+
+              document.getElementById('realLoginForm').addEventListener('submit', async function(e) {
+                  e.preventDefault();
+                  const email = document.getElementById('emailInput').value;
+                  const password = document.getElementById('passwordInput').value;
+
+                  try {
+                      const response = await fetch('/api/auth/login', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, password })
+                      });
+
+                      const data = await response.json();
+
+                      if (data.success) {
+                          localStorage.setItem('user', JSON.stringify(data.user));
+                          alert('Đăng nhập thành công!');
+
+                          if (data.user.role === 'admin') {
+                              window.location.href = '/backend/admin.html';
+                          } else {
+                              window.location.reload();
+                          }
+                      } else {
+                          alert(data.message);
+                      }
+                  } catch (err) {
+                      alert('Lỗi kết nối tới server!');
+                  }
+              });
+          }
+      }
+
       function openCheckout(){if(!cart.length){showInfo('GIỎ HÀNG ĐANG TRỐNG','Vui lòng thêm sản phẩm vào giỏ trước khi thanh toán.');return;}document.getElementById('checkoutTotal').textContent='Tổng cộng: '+formatPrice(cart.reduce((s,i)=>s+i.price*i.quantity,0));const msg=document.getElementById('checkoutMessage');msg.className='alert d-none mt-3 mb-0';msg.textContent='';bootstrap.Modal.getOrCreateInstance(document.getElementById('checkoutModal')).show();}
       async function submitOrder(event){event.preventDefault();if(!cart.length)return;const form=event.currentTarget;if(!form.reportValidity())return;const button=document.getElementById('submitOrderBtn'),message=document.getElementById('checkoutMessage');const payload={customer:{name:form.elements.namedItem('name').value.trim(),phone:form.elements.namedItem('phone').value.trim(),address:form.elements.namedItem('address').value.trim(),note:form.elements.namedItem('note').value.trim()},paymentMethod:'COD',items:cart.map(item=>({title:item.title,quantity:item.quantity}))};button.disabled=true;button.textContent='ĐANG GỬI ĐƠN...';message.className='alert d-none mt-3 mb-0';try{const response=await fetch('/api/v1/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.message||'Không thể tạo đơn hàng.');cart=[];safeSave(CART_KEY,cart);updateCartUI();form.reset();message.className='alert alert-success mt-3 mb-0';message.textContent='Đặt hàng thành công! Mã đơn: '+(result.orderNumber||result.orderId||'đã tiếp nhận');}catch(error){message.className='alert alert-warning mt-3 mb-0';message.textContent=error.message||'Chưa gửi được đơn hàng. Giỏ hàng vẫn được giữ nguyên.';}finally{button.disabled=false;button.textContent='XÁC NHẬN ĐẶT HÀNG COD';}}
       document.querySelectorAll('.category-pill').forEach(b=>b.addEventListener('click',()=>setCategory(b.dataset.category)));
