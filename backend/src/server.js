@@ -39,40 +39,39 @@ const origins = (process.env.FRONTEND_ORIGIN || 'https://fashionstore.id.vn')
 
 app.disable('x-powered-by');
 
+
 /*
 |--------------------------------------------------------------------------
 | SECURITY / CSP
 |--------------------------------------------------------------------------
-| Giữ các bảo vệ mặc định của Helmet.
-| Cho phép inline script/style hiện có trong admin.html.
-| Lâu dài nên chuyển inline script sang file JS riêng hoặc dùng nonce/hash.
 */
 
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        defaultSrc: ["'self'"],
 
         scriptSrc: ["'self'", "'unsafe-inline'"],
 
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
-          'https://cdn.jsdelivr.net',
+          "https://cdn.jsdelivr.net",
         ],
 
-        imgSrc: ["'self'", 'data:', 'https:'],
+        imgSrc: ["'self'", "data:", "https:"],
 
         connectSrc: [
           "'self'",
-          'https://fashion-store-in8c.onrender.com',
-          'https://fashionstore.id.vn',
+          "https://fashion-store-in8c.onrender.com",
+          "https://fashionstore.id.vn",
         ],
       },
     },
   })
 );
+
 
 /*
 |--------------------------------------------------------------------------
