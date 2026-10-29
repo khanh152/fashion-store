@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -39,7 +38,47 @@ const origins = (process.env.FRONTEND_ORIGIN || 'https://fashionstore.id.vn')
   .map((x) => x.trim());
 
 app.disable('x-powered-by');
-app.use(helmet());
+
+/*
+|--------------------------------------------------------------------------
+| SECURITY / CSP
+|--------------------------------------------------------------------------
+| Giữ các bảo vệ mặc định của Helmet.
+| Cho phép inline script/style hiện có trong admin.html.
+| Lâu dài nên chuyển inline script sang file JS riêng hoặc dùng nonce/hash.
+*/
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://cdn.jsdelivr.net',
+        ],
+
+        imgSrc: ["'self'", 'data:', 'https:'],
+
+        connectSrc: [
+          "'self'",
+          'https://fashion-store-in8c.onrender.com',
+          'https://fashionstore.id.vn',
+        ],
+      },
+    },
+  })
+);
+
+/*
+|--------------------------------------------------------------------------
+| CORS
+|--------------------------------------------------------------------------
+*/
 
 app.use(
   cors({
@@ -55,7 +94,19 @@ app.use(
   })
 );
 
+/*
+|--------------------------------------------------------------------------
+| BODY PARSER
+|--------------------------------------------------------------------------
+*/
+
 app.use(express.json({ limit: '1mb' }));
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN RATE LIMIT
+|--------------------------------------------------------------------------
+*/
 
 app.use(
   '/api/v1/admin/login',
@@ -66,6 +117,12 @@ app.use(
     legacyHeaders: false,
   })
 );
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCT VALIDATION
+|--------------------------------------------------------------------------
+*/
 
 const schema = z.object({
   name: z.string().trim().min(1).max(180),
@@ -102,6 +159,12 @@ const schema = z.object({
     ),
 });
 
+/*
+|--------------------------------------------------------------------------
+| PRODUCT RESPONSE FORMAT
+|--------------------------------------------------------------------------
+*/
+
 const shape = (r) => ({
   id: String(r.id),
   title: r.name,
@@ -112,13 +175,21 @@ const shape = (r) => ({
   description: r.description,
   image: r.image_data_url,
   sizes: r.sizes,
+
   stock: Object.values(r.sizes || {}).reduce(
     (a, n) => a + Number(n || 0),
     0
   ),
+
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN AUTHENTICATION
+|--------------------------------------------------------------------------
+*/
 
 function auth(req, res, next) {
   try {
@@ -141,6 +212,12 @@ function auth(req, res, next) {
   }
 }
 
+/*
+|--------------------------------------------------------------------------
+| VALIDATE REQUEST
+|--------------------------------------------------------------------------
+*/
+
 function validated(req, res) {
   const p = schema.safeParse(req.body);
 
@@ -155,6 +232,12 @@ function validated(req, res) {
   return p.data;
 }
 
+/*
+|--------------------------------------------------------------------------
+| ERROR RESPONSE
+|--------------------------------------------------------------------------
+*/
+
 function fail(res, e) {
   console.error(e);
 
@@ -167,8 +250,8 @@ function fail(res, e) {
 |--------------------------------------------------------------------------
 | ADMIN PAGE
 |--------------------------------------------------------------------------
-| Mở trang quản trị:
 | https://fashion-store-in8c.onrender.com/admin.html
+|--------------------------------------------------------------------------
 */
 
 app.get('/admin.html', (_req, res) => {
@@ -257,7 +340,7 @@ app.get('/api/v1/products', async (_q, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN PRODUCTS
+| ADMIN PRODUCTS - GET
 |--------------------------------------------------------------------------
 */
 
@@ -274,6 +357,12 @@ app.get('/api/v1/admin/products', auth, async (_q, res) => {
     fail(res, e);
   }
 });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN PRODUCTS - CREATE
+|--------------------------------------------------------------------------
+*/
 
 app.post('/api/v1/admin/products', auth, async (req, res) => {
   const p = validated(req, res);
@@ -307,6 +396,12 @@ app.post('/api/v1/admin/products', auth, async (req, res) => {
     fail(res, e);
   }
 });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN PRODUCTS - UPDATE
+|--------------------------------------------------------------------------
+*/
 
 app.put('/api/v1/admin/products/:id', auth, async (req, res) => {
   const id = Number(req.params.id);
@@ -361,6 +456,12 @@ app.put('/api/v1/admin/products/:id', auth, async (req, res) => {
     fail(res, e);
   }
 });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN PRODUCTS - DELETE
+|--------------------------------------------------------------------------
+*/
 
 app.delete('/api/v1/admin/products/:id', auth, async (req, res) => {
   const id = Number(req.params.id);
