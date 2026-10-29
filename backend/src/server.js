@@ -512,7 +512,48 @@ app.use((e, _q, res, _n) => {
 */
 
 const port = Number(process.env.PORT || 3000);
+/*
+|--------------------------------------------------------------------------
+| AUTH API
+|--------------------------------------------------------------------------
+*/
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
 
+    try {
+        // Truy vấn tìm tài khoản trong database PostgreSQL
+        const queryText = 'SELECT id, name, email, role FROM users WHERE email = $1 AND password = $2';
+        const result = await pool.query(queryText, [email, password]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Email hoặc mật khẩu không chính xác!' 
+            });
+        }
+
+        const user = result.rows[0];
+
+        // Trả về kết quả kèm vai trò (admin hoặc customer)
+        return res.json({
+            success: true,
+            message: 'Đăng nhập thành công!',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi server: ' + error.message 
+        });
+    }
+});
 app.listen(port, () => {
   console.log(`DK FASHION API listening on ${port}`);
 });
