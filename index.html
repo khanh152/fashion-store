@@ -476,7 +476,8 @@
     <script>
       const CART_KEY = "dk_fashion_cart_v3";
       const WISHLIST_KEY = "dk_fashion_wishlist_v1";
-      const products = [
+      const API_BASE = "https://fashion-store-in8c.onrender.com";
+      let products = [
         {id:'samba-og',title:'Giày Samba OG Unisex',category:'Originals',audience:'Nam Nữ',price:2400000,oldPrice:2800000,badge:'BÁN CHẠY',image:'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=900&q=85',description:'Thiết kế kinh điển lấy cảm hứng từ sân bóng, phù hợp phối đồ hằng ngày.'},
         {id:'superstar',title:'Giày Superstar Mũi Vỏ Sò',category:'Originals',audience:'Nam Nữ',price:2600000,oldPrice:null,badge:'ICONIC',image:'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=900&q=85',description:'Phong cách tối giản với chi tiết mũi vỏ sò đặc trưng, dễ phối nhiều trang phục.'},
         {id:'ultraboost',title:'Giày Chạy Bộ Ultraboost Light',category:'Chạy bộ',audience:'Nam',price:4500000,oldPrice:5200000,badge:'HIỆU NĂNG',image:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85',description:'Phong cách thể thao năng động dành cho chạy bộ và các hoạt động hằng ngày.'},
@@ -495,6 +496,27 @@
       function safeSave(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
       function formatPrice(value) { return Number(value || 0).toLocaleString('vi-VN') + ' đ'; }
       function escapeHtml(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+      async function loadLiveProducts() {
+        try {
+          const response = await fetch(API_BASE + '/api/v1/products', { cache: 'no-store' });
+          if (!response.ok) throw new Error('API products unavailable');
+          const data = await response.json();
+          if (Array.isArray(data.products) && data.products.length) {
+            products = data.products.map(p => ({
+              id: String(p.id), title: p.title || p.name,
+              category: p.category || 'Lifestyle', audience: p.audience || 'Nam Nữ',
+              price: Number(p.price || 0), oldPrice: null,
+              badge: Number(p.stock || 0) <= 0 ? 'HẾT HÀNG' : 'MỚI',
+              image: p.image, description: p.description || '',
+              sizes: p.sizes || {}, stock: Number(p.stock || 0)
+            }));
+            renderProducts();
+          }
+        } catch (error) {
+          console.warn('Không tải được sản phẩm từ API; đang hiển thị danh mục mẫu.', error);
+        }
+      }
+
       function renderProducts() {
         const grid = document.getElementById('productGrid');
         const query = (document.getElementById('searchInput')?.value || '').trim().toLocaleLowerCase('vi');
@@ -552,79 +574,85 @@
       function removeFromCart(index){cart.splice(index,1);safeSave(CART_KEY,cart);updateCartUI();}
       function toggleWishlist(id){const p=products.find(x=>x.id===id);if(!p)return;if(wishlist.has(id))wishlist.delete(id);else wishlist.add(id);safeSave(WISHLIST_KEY,[...wishlist]);renderProducts();if(activeProduct?.id===id)updateDetailWishlist();}
       function showWishlist(){const saved=products.filter(p=>wishlist.has(p.id));document.getElementById('infoTitle').textContent='SẢN PHẨM YÊU THÍCH';document.getElementById('infoBody').innerHTML=saved.length?saved.map(p=>`<div class="d-flex align-items-center gap-3 mb-3"><img src="${escapeHtml(p.image)}" alt="" style="width:70px;height:70px;object-fit:cover"><div class="flex-grow-1"><strong>${escapeHtml(p.title)}</strong><div>${formatPrice(p.price)}</div></div><button class="btn btn-sm btn-outline-dark rounded-0" onclick="bootstrap.Modal.getInstance(document.getElementById('infoModal')).hide();openProduct('${p.id}')">Xem</button></div>`).join(''):'Bạn chưa lưu sản phẩm nào. Hãy bấm biểu tượng trái tim trên sản phẩm.';bootstrap.Modal.getOrCreateInstance(document.getElementById('infoModal')).show();}
-      function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;activeProduct=p;selectedSize='36';document.getElementById('detailImage').src=p.image;document.getElementById('detailImage').alt=p.title;document.getElementById('detailCategory').textContent=`${p.category} · ${p.audience}`;document.getElementById('detailTitle').textContent=p.title;document.getElementById('detailPrice').textContent=formatPrice(p.price);document.getElementById('detailOldPrice').textContent=p.oldPrice?formatPrice(p.oldPrice):'';document.getElementById('detailDescription').textContent=p.description;document.querySelectorAll('#detailSizes .detail-size').forEach(b=>b.classList.toggle('active',b.textContent===selectedSize));updateDetailWishlist();bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailModal')).show();}
+      function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;activeProduct=p;const sizeMap=p.sizes||{};const availableSizes=Object.keys(sizeMap).filter(k=>Number(sizeMap[k])>0);selectedSize=availableSizes[0]||'36';document.getElementById('detailImage').src=p.image;document.getElementById('detailImage').alt=p.title;document.getElementById('detailCategory').textContent=`${p.category} · ${p.audience}`;document.getElementById('detailTitle').textContent=p.title;document.getElementById('detailPrice').textContent=formatPrice(p.price);document.getElementById('detailOldPrice').textContent=p.oldPrice?formatPrice(p.oldPrice):'';document.getElementById('detailDescription').textContent=p.description;const sizeBox=document.getElementById('detailSizes');if(availableSizes.length){sizeBox.innerHTML=availableSizes.map(size=>`<button type="button" class="detail-size ${size===selectedSize?'active':''}" data-size="${escapeHtml(size)}">${escapeHtml(size)}</button>`).join('');sizeBox.querySelectorAll('.detail-size').forEach(b=>b.addEventListener('click',()=>{selectedSize=b.dataset.size;sizeBox.querySelectorAll('.detail-size').forEach(x=>x.classList.toggle('active',x===b));}));}else{sizeBox.querySelectorAll('.detail-size').forEach(b=>b.classList.toggle('active',b.textContent===selectedSize));}updateDetailWishlist();bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailModal')).show();}
       function updateDetailWishlist(){const b=document.getElementById('detailWishlistButton');if(!activeProduct)return;const saved=wishlist.has(activeProduct.id);b.innerHTML=`<i class="${saved?'fa-solid fa-heart text-danger':'fa-regular fa-heart'} me-2"></i>${saved?'ĐÃ LƯU YÊU THÍCH':'THÊM VÀO YÊU THÍCH'}`;}
       function showInfo(title,body){document.getElementById('infoTitle').textContent=title;document.getElementById('infoBody').textContent=body;bootstrap.Modal.getOrCreateInstance(document.getElementById('infoModal')).show();}
       
       // THAY THẾ HÀM SHOWACCOUNTINFO BẰNG FORM ĐĂNG NHẬP THẬT
       function showAccountInfo() {
-          const currentUser = JSON.parse(localStorage.getItem('user'));
-
-          if (currentUser) {
-              if (currentUser.role === 'admin') {
-                  if (confirm(`Chào Admin ${currentUser.name}! Bạn có muốn vào trang quản trị không?`)) {
-                      window.location.href = '/backend/admin.html';
-                  }
-              } else {
-                  if (confirm(`Bạn đang đăng nhập là: ${currentUser.name}. Bạn có muốn đăng xuất không?`)) {
-                      localStorage.removeItem('user');
-                      window.location.reload();
-                  }
-              }
-          } else {
-              let existingModal = document.getElementById('customLoginModal');
-              if (existingModal) existingModal.remove();
-
-              let loginHTML = `
-                  <div id="customLoginModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-                      <div style="background: #fff; padding: 30px; border-radius: 8px; width: 350px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                          <span onclick="document.getElementById('customLoginModal').remove()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 22px; font-weight: bold;">&times;</span>
-                          <h3 style="margin-bottom: 20px; text-align: center; font-family: sans-serif;">ĐĂNG NHẬP HỆ THỐNG</h3>
-                          <form id="realLoginForm">
-                              <input type="email" id="emailInput" placeholder="Nhập Email" required style="width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                              <input type="password" id="passwordInput" placeholder="Nhập Mật khẩu" required style="width: 100%; margin-bottom: 15px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-                              <button type="submit" style="width: 100%; padding: 10px; background: #000; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">ĐĂNG NHẬP</button>
-                          </form>
-                      </div>
-                  </div>
-              `;
-              document.body.insertAdjacentHTML('beforeend', loginHTML);
-
-              document.getElementById('realLoginForm').addEventListener('submit', async function(e) {
-                  e.preventDefault();
-                  const email = document.getElementById('emailInput').value;
-                  const password = document.getElementById('passwordInput').value;
-
-                  try {
-                      const response = await fetch('/api/auth/login', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email, password })
-                      });
-
-                      const data = await response.json();
-
-                      if (data.success) {
-                          localStorage.setItem('user', JSON.stringify(data.user));
-                          alert('Đăng nhập thành công!');
-
-                          if (data.user.role === 'admin') {
-                              window.location.href = '/backend/admin.html';
-                          } else {
-                              window.location.reload();
-                          }
-                      } else {
-                          alert(data.message);
-                      }
-                  } catch (err) {
-                      alert('Lỗi kết nối tới server!');
-                  }
-              });
+        const currentUser = loadJson('user', null);
+        if (currentUser) {
+          const message = currentUser.role === 'admin'
+            ? `Chào Admin ${currentUser.name}! Mở trang quản trị?`
+            : `Bạn đang đăng nhập là ${currentUser.name}. Đăng xuất?`;
+          if (confirm(message)) {
+            if (currentUser.role === 'admin') window.location.href = API_BASE + '/admin.html';
+            else { localStorage.removeItem('user'); localStorage.removeItem('customerToken'); window.location.reload(); }
           }
+          return;
+        }
+        document.getElementById('customLoginModal')?.remove();
+        const markup = `
+          <div id="customLoginModal" style="position:fixed;inset:0;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px">
+            <section style="background:#fff;width:min(420px,100%);padding:28px;box-shadow:0 18px 60px #0003;position:relative">
+              <button type="button" aria-label="Đóng" id="accountClose" style="position:absolute;right:14px;top:10px;border:0;background:none;font-size:26px">×</button>
+              <div style="font-size:11px;letter-spacing:2px;font-weight:800;color:#666">DK FASHION</div>
+              <h2 id="accountHeading" style="font-size:23px;font-weight:900;margin:8px 0 18px">ĐĂNG NHẬP HỆ THỐNG</h2>
+              <form id="realLoginForm">
+                <div id="accountNameWrap" style="display:none"><label for="accountName" style="display:block;font-size:13px;margin-bottom:5px">Họ và tên</label><input id="accountName" autocomplete="name" style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:13px" minlength="2" maxlength="120"></div>
+                <label for="emailInput" style="display:block;font-size:13px;margin-bottom:5px">Email</label>
+                <input type="email" id="emailInput" autocomplete="email" required style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:13px">
+                <label for="passwordInput" style="display:block;font-size:13px;margin-bottom:5px">Mật khẩu</label>
+                <input type="password" id="passwordInput" autocomplete="current-password" required minlength="8" maxlength="200" style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:14px">
+                <div id="accountError" role="alert" style="display:none;color:#b42318;font-size:13px;margin-bottom:12px"></div>
+                <button id="accountSubmit" type="submit" style="width:100%;padding:12px;background:#111;color:#fff;border:0;font-weight:800;letter-spacing:.5px">ĐĂNG NHẬP</button>
+              </form>
+              <p style="font-size:13px;text-align:center;margin:16px 0 0"><span id="accountSwitchText">Bạn chưa có tài khoản?</span> <button id="accountSwitch" type="button" style="border:0;background:none;text-decoration:underline;font-weight:700">Đăng ký</button></p>
+              <p style="font-size:11px;color:#777;margin:12px 0 0">Tài khoản khách hàng và tài khoản quản trị có quyền truy cập khác nhau.</p>
+            </section>
+          </div>`;
+        document.body.insertAdjacentHTML('beforeend', markup);
+        let registerMode = false;
+        const $account = id => document.getElementById(id);
+        $account('accountClose').onclick = () => $account('customLoginModal').remove();
+        $account('accountSwitch').onclick = () => {
+          registerMode = !registerMode;
+          $account('accountNameWrap').style.display = registerMode ? 'block' : 'none';
+          $account('accountName').required = registerMode;
+          $account('accountHeading').textContent = registerMode ? 'TẠO TÀI KHOẢN' : 'ĐĂNG NHẬP HỆ THỐNG';
+          $account('accountSubmit').textContent = registerMode ? 'ĐĂNG KÝ' : 'ĐĂNG NHẬP';
+          $account('accountSwitchText').textContent = registerMode ? 'Bạn đã có tài khoản?' : 'Bạn chưa có tài khoản?';
+          $account('accountSwitch').textContent = registerMode ? 'Đăng nhập' : 'Đăng ký';
+          $account('passwordInput').autocomplete = registerMode ? 'new-password' : 'current-password';
+          $account('passwordInput').minLength = registerMode ? 8 : 1;
+          $account('accountError').style.display = 'none';
+        };
+        $account('realLoginForm').onsubmit = async event => {
+          event.preventDefault();
+          const submit = $account('accountSubmit'), error = $account('accountError');
+          submit.disabled = true; submit.textContent = 'ĐANG XỬ LÝ...'; error.style.display = 'none';
+          const payload = { email: $account('emailInput').value.trim(), password: $account('passwordInput').value };
+          if (registerMode) payload.name = $account('accountName').value.trim();
+          try {
+            const response = await fetch(API_BASE + (registerMode ? '/api/auth/register' : '/api/auth/login'), {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể xác thực tài khoản.');
+            localStorage.setItem('user', JSON.stringify(data.user));
+            if (data.token) localStorage.setItem('customerToken', data.token);
+            if (data.user.role === 'admin') window.location.href = API_BASE + '/admin.html';
+            else { $account('customLoginModal').remove(); window.location.reload(); }
+          } catch (err) {
+            error.textContent = err.message || 'Không kết nối được máy chủ.'; error.style.display = 'block';
+          } finally {
+            submit.disabled = false; submit.textContent = registerMode ? 'ĐĂNG KÝ' : 'ĐĂNG NHẬP';
+          }
+        };
       }
 
       function openCheckout(){if(!cart.length){showInfo('GIỎ HÀNG ĐANG TRỐNG','Vui lòng thêm sản phẩm vào giỏ trước khi thanh toán.');return;}document.getElementById('checkoutTotal').textContent='Tổng cộng: '+formatPrice(cart.reduce((s,i)=>s+i.price*i.quantity,0));const msg=document.getElementById('checkoutMessage');msg.className='alert d-none mt-3 mb-0';msg.textContent='';bootstrap.Modal.getOrCreateInstance(document.getElementById('checkoutModal')).show();}
-      async function submitOrder(event){event.preventDefault();if(!cart.length)return;const form=event.currentTarget;if(!form.reportValidity())return;const button=document.getElementById('submitOrderBtn'),message=document.getElementById('checkoutMessage');const payload={customer:{name:form.elements.namedItem('name').value.trim(),phone:form.elements.namedItem('phone').value.trim(),address:form.elements.namedItem('address').value.trim(),note:form.elements.namedItem('note').value.trim()},paymentMethod:'COD',items:cart.map(item=>({title:item.title,quantity:item.quantity}))};button.disabled=true;button.textContent='ĐANG GỬI ĐƠN...';message.className='alert d-none mt-3 mb-0';try{const response=await fetch('/api/v1/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.message||'Không thể tạo đơn hàng.');cart=[];safeSave(CART_KEY,cart);updateCartUI();form.reset();message.className='alert alert-success mt-3 mb-0';message.textContent='Đặt hàng thành công! Mã đơn: '+(result.orderNumber||result.orderId||'đã tiếp nhận');}catch(error){message.className='alert alert-warning mt-3 mb-0';message.textContent=error.message||'Chưa gửi được đơn hàng. Giỏ hàng vẫn được giữ nguyên.';}finally{button.disabled=false;button.textContent='XÁC NHẬN ĐẶT HÀNG COD';}}
+      async function submitOrder(event){event.preventDefault();if(!cart.length)return;const form=event.currentTarget;if(!form.reportValidity())return;const button=document.getElementById('submitOrderBtn'),message=document.getElementById('checkoutMessage');const payload={customer:{name:form.elements.namedItem('name').value.trim(),phone:form.elements.namedItem('phone').value.trim(),address:form.elements.namedItem('address').value.trim(),note:form.elements.namedItem('note').value.trim()},paymentMethod:'COD',items:cart.map(item=>({productId:item.id,size:item.size,quantity:item.quantity}))};button.disabled=true;button.textContent='ĐANG GỬI ĐƠN...';message.className='alert d-none mt-3 mb-0';try{const response=await fetch(API_BASE + '/api/v1/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.message||'Không thể tạo đơn hàng.');cart=[];safeSave(CART_KEY,cart);updateCartUI();form.reset();message.className='alert alert-success mt-3 mb-0';message.textContent='Đặt hàng thành công! Mã đơn: '+(result.orderNumber||result.orderId||'đã tiếp nhận');}catch(error){message.className='alert alert-warning mt-3 mb-0';message.textContent=error.message||'Chưa gửi được đơn hàng. Giỏ hàng vẫn được giữ nguyên.';}finally{button.disabled=false;button.textContent='XÁC NHẬN ĐẶT HÀNG COD';}}
       document.querySelectorAll('.category-pill').forEach(b=>b.addEventListener('click',()=>setCategory(b.dataset.category)));
       document.querySelectorAll('.category-nav').forEach(a=>a.addEventListener('click',()=>setCategory(a.dataset.category)));
       document.querySelectorAll('#detailSizes .detail-size').forEach(b=>b.addEventListener('click',()=>{selectedSize=b.textContent;document.querySelectorAll('#detailSizes .detail-size').forEach(x=>x.classList.toggle('active',x===b));}));
@@ -632,7 +660,7 @@
       document.getElementById('detailWishlistButton').addEventListener('click',()=>{if(activeProduct)toggleWishlist(activeProduct.id);});
       document.getElementById('checkoutForm').addEventListener('submit',submitOrder);
       document.querySelectorAll('input[name="sort"]').forEach(input=>input.addEventListener('change',renderProducts));
-      renderProducts();updateCartUI();
+      renderProducts();updateCartUI();loadLiveProducts();
     </script>
 
 </body>
