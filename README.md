@@ -1,42 +1,64 @@
-# DK FASHION — nâng cấp trên nhánh `backend-foundation`
+# DK FASHION — source upgrade (GitHub Pages + Render + Supabase)
 
-Gói này giữ `index.html` hiện có làm nền tảng, không thay tên miền `fashionstore.id.vn`, không triển khai hosting và không thay đổi nhánh `main`.
+This is a code update based on the ZIP supplied in the conversation. It keeps the existing storefront design and custom domain `fashionstore.id.vn`; it does not deploy or change the live GitHub repository automatically.
 
-## Đã nâng cấp trong giao diện
-- Giỏ hàng được lưu ở trình duyệt; số lượng tăng/giảm và xóa sản phẩm.
-- Trang chủ có banner lớn, thiết kế responsive cho điện thoại và máy tính.
-- 8 sản phẩm mẫu có hình ảnh từ CDN ảnh bên ngoài, giá niêm yết/giá ưu đãi và nhãn sản phẩm.
-- Tìm kiếm theo tên/danh mục/đối tượng; lọc danh mục; sắp xếp giá tăng/giảm.
-- Trang chi tiết sản phẩm dạng modal, chọn cỡ giày và thêm vào giỏ.
-- Giỏ hàng lưu ở trình duyệt; tăng/giảm số lượng, xóa sản phẩm và tính tổng tiền.
-- Danh sách yêu thích được lưu ở trình duyệt; có thể mở danh sách đã lưu.
-- Biểu mẫu đặt hàng COD gửi đến API khi backend và PostgreSQL đã cấu hình.
-- Frontend gửi đơn tới `POST /api/v1/orders`. API kiểm tra dữ liệu, lấy giá từ database (không tin giá do trình duyệt gửi), khóa tồn kho và ghi đơn hàng trong transaction.
+## Main changes
 
-## Cấu trúc
-- `index.html`: giao diện gốc được nâng cấp.
-- `backend/src/server.js`: API Express.
-- `backend/db/schema.sql`: bảng PostgreSQL và 4 sản phẩm mẫu.
-- `backend/.env.example`: mẫu cấu hình, không chứa thông tin đăng nhập thật.
+- Storefront requests use the configured Render API base (`https://fashion-store-in8c.onrender.com`) rather than same-origin `/api/...` paths on GitHub Pages.
+- The storefront loads products from `GET /api/v1/products`; the embedded demo catalog remains as a fallback if the API has no product records or is unreachable.
+- Product detail sizes are built from the inventory values returned by Admin.
+- Account dialog connects to customer `POST /api/auth/login` and `POST /api/auth/register`, displays API errors, and stores the returned customer token/user. Customer passwords are bcrypt-hashed.
+- Admin page retains protected product create/update/hide flows and includes a COD order table with status updates.
+- COD checkout sends product IDs, sizes and quantities. Backend resolves price from PostgreSQL, validates inventory, uses row locks/transaction, stores order and items, and decreases stock.
+- Cancelling a not-yet-cancelled order restores its reserved stock in a transaction.
+- Removed default plaintext demo-user inserts from schema. Successful legacy plaintext login is upgraded to bcrypt once; do not keep demo credentials in production.
 
-## Chạy backend
-1. Cài Node.js 20 trở lên.
-2. Trong thư mục `backend`, chạy `npm install`.
-3. Tạo file `backend/.env` từ `.env.example`, điền `DATABASE_URL` của PostgreSQL riêng của bạn.
-4. Chạy nội dung `backend/db/schema.sql` trong PostgreSQL của bạn.
-5. Chạy `npm start`.
-6. Kiểm tra `http://localhost:3000/api/v1/health`.
+## Important: apply the database schema first
 
-`DATABASE_URL` chỉ đặt trong `.env` cục bộ; không commit file `.env`. Không dùng thông tin kết nối giả làm thông tin thật.
+Before deploying the new backend, open Supabase SQL Editor and run the complete `backend/db/schema.sql`. It uses `IF NOT EXISTS` for tables/indexes and adds the order tables required by the new COD API. Back up your database before applying any production migration.
 
-## Giới hạn cần biết
-- Ảnh hiện lấy từ Unsplash CDN nên cần internet; nếu nhà cung cấp ảnh thay đổi URL hoặc mạng chặn CDN, ảnh có thể không tải.
-- Đây là dữ liệu demo, không phải danh mục/tồn kho thật của cửa hàng. Hãy thay ảnh, mô tả, giá và sản phẩm trước khi bán hàng thật.
-- Chức năng đăng nhập, quản trị, tra cứu đơn, vận chuyển, email và thanh toán trực tuyến chưa được triển khai.
-- Chưa chạy kiểm thử trình duyệt end-to-end; đã kiểm tra cú pháp JavaScript giao diện và Node.js backend.
+The schema creates `products`, `users`, `orders`, and `order_items`. It intentionally does not seed known demo passwords. Customer accounts are created through the registration API. Admin access remains separate and uses `ADMIN_PASSWORD_HASH` in Render.
 
-## Lưu ý quan trọng
-- Gói này chưa tự động triển khai lên tên miền/hosting.
-- API sản phẩm và đặt hàng yêu cầu PostgreSQL đã được cấu hình và schema đã được chạy.
-- Chưa có trang quản trị được bảo vệ bằng đăng nhập; không nên đưa API quản trị công khai trước khi bổ sung xác thực và phân quyền.
-- Giao diện hiện giữ danh sách sản phẩm tĩnh; bước tích hợp tiếp theo là tải danh sách từ `GET /api/v1/products` và thiết lập đường dẫn API phù hợp khi triển khai.
+## Render environment variables
+
+Set these in the Render Web Service environment (never commit real values):
+
+- `DATABASE_URL`: Supabase PostgreSQL connection string.
+- `NODE_ENV`: `production`.
+- `FRONTEND_ORIGIN`: comma-separated exact origins, e.g. `https://fashionstore.id.vn,https://www.fashionstore.id.vn` if the `www` host is actually used.
+- `JWT_SECRET`: a randomly generated private string with at least 32 characters.
+- `ADMIN_PASSWORD_HASH`: bcrypt hash of your chosen Admin password (generated locally with bcryptjs).
+
+The admin page is served by Render at `https://fashion-store-in8c.onrender.com/admin.html`. Keep the existing Render service and GitHub Pages custom domain; the code does not require changing DNS.
+
+## Deploy sequence
+
+1. Back up the Supabase project and run `backend/db/schema.sql` in Supabase SQL Editor.
+2. Review the environment variables in Render. Rotate any database credential or JWT secret that was exposed in a chat or public repository.
+3. Deploy the updated `backend/` folder to the configured Render service (Docker build context remains repository root, Dockerfile at `backend/Dockerfile` if that is how the service is configured; verify the existing Render Root Directory/Dockerfile setting before deployment).
+4. Verify `https://fashion-store-in8c.onrender.com/health` returns `{ "ok": true, "service": "dk-fashion-api" }`.
+5. Publish the updated `index.html` to the existing GitHub Pages branch/repository while preserving `CNAME` and the current domain configuration.
+6. Open the storefront, add a product through Admin, verify it appears on the storefront, and test a COD order with a non-production/test product before accepting real orders.
+
+## API endpoints in this version
+
+- `GET /health`
+- `GET /api/v1/products`
+- `POST /api/v1/admin/login`
+- `GET /api/v1/admin/products`
+- `POST /api/v1/admin/products`
+- `PUT /api/v1/admin/products/:id`
+- `DELETE /api/v1/admin/products/:id` (soft-hide)
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/v1/orders` (guest COD)
+- `GET /api/v1/admin/orders`
+- `PATCH /api/v1/admin/orders/:id/status`
+
+## Limitations / production checklist
+
+- This ZIP is source code, not an automatic live deployment. The Supabase schema and Render environment need to be applied by the owner.
+- The current Admin stores uploaded product images as data URLs in PostgreSQL. It is acceptable for a small catalog but not ideal at scale; object storage (e.g. Supabase Storage) is a better production option.
+- The customer area has account registration/login, but a full profile editor, password reset/email verification and customer order-history screen are not included in this pass.
+- COD order statuses are `pending`, `confirmed`, `shipping`, `completed`, `cancelled`. Cancellation restores stock; changing a cancelled order back is blocked.
+- Test deployment, CORS, database migrations, file upload sizes, and real checkout end-to-end before taking live orders.

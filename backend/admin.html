@@ -126,6 +126,18 @@
           </div>
         </div>
       </div>
+      <div class="col-12">
+        <div class="card p-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <h2 class="h5 mb-0">Đơn hàng COD</h2>
+            <button id="refreshOrders" type="button" class="btn btn-outline-dark btn-sm">Tải lại đơn hàng</button>
+          </div>
+          <div class="table-responsive"><table class="table table-sm align-middle">
+            <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
+            <tbody id="orderRows"><tr><td colspan="6" class="text-secondary">Đăng nhập để tải đơn hàng.</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -193,6 +205,7 @@ $('loginForm').onsubmit = async e => {
     msg('Đăng nhập thành công', 'success');
 
     await load();
+    await loadOrders();
   } catch (e) {
     msg(e.message, 'danger');
   }
@@ -400,6 +413,39 @@ async function load() {
     $('rows').append(tr);
   }
 }
+
+async function loadOrders() {
+  const body = $('orderRows');
+  body.replaceChildren();
+  try {
+    const data = await api('/api/v1/admin/orders');
+    if (!data.orders?.length) {
+      const tr = document.createElement('tr'); const td = document.createElement('td');
+      td.colSpan = 6; td.className = 'text-secondary'; td.textContent = 'Chưa có đơn hàng COD.'; tr.append(td); body.append(tr); return;
+    }
+    for (const order of data.orders) {
+      const tr = document.createElement('tr');
+      const values = [
+        `DK-${order.id}`,
+        `${order.customer_name} · ${order.customer_phone}\n${order.customer_address}`,
+        (order.items || []).map(i => `${i.name} (${i.size}) ×${i.quantity}`).join(', '),
+        price(order.total_vnd)
+      ];
+      values.forEach((value, index) => { const td = document.createElement('td'); td.textContent = value; if(index===1||index===2) td.style.whiteSpace='pre-line'; tr.append(td); });
+      const statusCell = document.createElement('td');
+      const select = document.createElement('select'); select.className = 'form-select form-select-sm';
+      [['pending','Chờ xác nhận'],['confirmed','Đã xác nhận'],['shipping','Đang giao'],['completed','Hoàn thành'],['cancelled','Đã hủy']].forEach(([v,label])=>{const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=order.status===v;select.append(option);});
+      statusCell.append(select); tr.append(statusCell);
+      const actionCell=document.createElement('td'); const save=document.createElement('button'); save.className='btn btn-sm btn-dark';save.textContent='Lưu';
+      save.onclick=async()=>{save.disabled=true;try{await api(`/api/v1/admin/orders/${order.id}/status`,{method:'PATCH',body:JSON.stringify({status:select.value})});msg('Đã cập nhật trạng thái đơn hàng','success');await loadOrders();}catch(e){msg(e.message,'danger');}finally{save.disabled=false;}};
+      actionCell.append(save);tr.append(actionCell);body.append(tr);
+    }
+  } catch (e) {
+    const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.className='text-danger';td.textContent=e.message;tr.append(td);body.append(tr);
+  }
+}
+$('refreshOrders').onclick = loadOrders;
+
 </script>
 </body>
 </html>
