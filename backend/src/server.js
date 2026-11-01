@@ -316,23 +316,33 @@ app.get('/health', async (_q, s) => {
 |--------------------------------------------------------------------------
 */
 
+
 app.post('/api/v1/admin/login', async (req, res) => {
   try {
+    const username = req.body?.username;
     const pw = req.body?.password;
 
-    if (typeof pw !== 'string' || pw.length > 200) {
+    if (
+      typeof username !== 'string' ||
+      typeof pw !== 'string' ||
+      username.length > 100 ||
+      pw.length > 200
+    ) {
       return res.status(400).json({
-        message: 'Mật khẩu không hợp lệ.',
+        message: 'Tên đăng nhập hoặc mật khẩu không hợp lệ.',
       });
     }
 
-    if (!(await bcrypt.compare(pw, process.env.ADMIN_PASSWORD_HASH))) {
+    if (
+      username.trim() !== 'admin' ||
+      !(await bcrypt.compare(pw, process.env.ADMIN_PASSWORD_HASH))
+    ) {
       return res.status(401).json({
-        message: 'Mật khẩu quản trị không đúng.',
+        message: 'Tên đăng nhập hoặc mật khẩu quản trị không đúng.',
       });
     }
 
-    res.json({
+    return res.json({
       token: jwt.sign(
         { role: 'admin' },
         process.env.JWT_SECRET,
@@ -346,6 +356,7 @@ app.post('/api/v1/admin/login', async (req, res) => {
     fail(res, e);
   }
 });
+
 
 /*
 |--------------------------------------------------------------------------

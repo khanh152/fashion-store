@@ -604,7 +604,7 @@
               </div>
               <form id="realLoginForm">
                 <div id="accountNameWrap" style="display:none"><label for="accountName" style="display:block;font-size:13px;margin-bottom:5px">Họ và tên</label><input id="accountName" autocomplete="name" style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:13px" minlength="2" maxlength="120"></div>
-                <label for="emailInput" style="display:block;font-size:13px;margin-bottom:5px">Email</label>
+                <label id="emailLabel" for="emailInput" style="display:block;font-size:13px;margin-bottom:5px">Email</label>
                 <input type="email" id="emailInput" autocomplete="email" required style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:13px">
                 <label for="passwordInput" style="display:block;font-size:13px;margin-bottom:5px">Mật khẩu</label>
                 <input type="password" id="passwordInput" autocomplete="current-password" required minlength="8" maxlength="200" style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:14px">
@@ -617,6 +617,7 @@
           </div>`;
         document.body.insertAdjacentHTML('beforeend', markup);
         let registerMode = false;
+        let adminMode = false;
         const $account = id => document.getElementById(id);
         $account('accountClose').onclick = () => $account('customLoginModal').remove();
         const setLoginMode = isAdmin => {
@@ -629,7 +630,7 @@
           $account('accountName').required = false;
           $account('accountSwitchRow').style.display = isAdmin ? 'none' : 'block';
           $account('emailLabel').textContent = isAdmin ? 'Tên tài khoản hoặc email Admin' : 'Email';
-          $account('emailInput').placeholder = isAdmin ? 'admin@fashionstore.id.vn' : 'you@example.com';
+          $account('emailInput').placeholder = isAdmin ? 'admin' : 'you@example.com';
           $account('emailInput').type = 'text';
           $account('accountHeading').textContent = isAdmin ? 'ĐĂNG NHẬP QUẢN TRỊ' : 'ĐĂNG NHẬP KHÁCH HÀNG';
           $account('accountSubmit').textContent = 'ĐĂNG NHẬP';
@@ -654,18 +655,28 @@
           event.preventDefault();
           const submit = $account('accountSubmit'), error = $account('accountError');
           submit.disabled = true; submit.textContent = 'ĐANG XỬ LÝ...'; error.style.display = 'none';
-          const payload = { email: $account('emailInput').value.trim(), password: $account('passwordInput').value };
+          const usernameOrEmail = $account('emailInput').value.trim();
+          const password = $account('passwordInput').value;
+          const payload = adminMode
+            ? { username: usernameOrEmail, password }
+            : { email: usernameOrEmail, password };
           if (registerMode) payload.name = $account('accountName').value.trim();
           try {
-            const response = await fetch(API_BASE + (registerMode ? '/api/auth/register' : '/api/auth/login'), {
+            const endpoint = adminMode
+              ? '/api/v1/admin/login'
+              : (registerMode ? '/api/auth/register' : '/api/auth/login');
+            const response = await fetch(API_BASE + endpoint, {
               method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok || !data.success) throw new Error(data.message || 'Không thể xác thực tài khoản.');
+            if (!response.ok || (adminMode ? !data.token : !data.success)) throw new Error(data.message || 'Không thể xác thực tài khoản.');
+            if (adminMode) {
+              window.location.href = API_BASE + '/admin.html#adminToken=' + encodeURIComponent(data.token);
+              return;
+            }
             localStorage.setItem('user', JSON.stringify(data.user));
             if (data.token) localStorage.setItem('customerToken', data.token);
-            if (data.user.role === 'admin') window.location.href = API_BASE + '/admin.html';
-            else { $account('customLoginModal').remove(); window.location.reload(); }
+            $account('customLoginModal').remove(); window.location.reload();
           } catch (err) {
             error.textContent = err.message || 'Không kết nối được máy chủ.'; error.style.display = 'block';
           } finally {

@@ -29,8 +29,10 @@
   <section id="login" class="card p-4 mx-auto" style="max-width:460px">
     <h1 class="h4 fw-bold">Đăng nhập quản trị</h1>
     <form id="loginForm">
+      <label class="form-label" for="username">Tên đăng nhập</label>
+      <input id="username" class="form-control mb-3" type="text" autocomplete="username" value="admin" required>
       <label class="form-label" for="pw">Mật khẩu quản trị</label>
-      <input id="pw" class="form-control mb-3" type="password" required>
+      <input id="pw" class="form-control mb-3" type="password" autocomplete="current-password" required>
       <button class="btn btn-dark w-100">ĐĂNG NHẬP</button>
     </form>
   </section>
@@ -144,8 +146,9 @@
 
 <script>
 const API_URL = 'https://fashion-store-in8c.onrender.com';
+const ADMIN_TOKEN_KEY = 'dkFashionAdminToken';
 
-let token = '';
+let token = localStorage.getItem(ADMIN_TOKEN_KEY) || '';
 let image = '';
 
 const $ = id => document.getElementById(id);
@@ -193,10 +196,12 @@ $('loginForm').onsubmit = async e => {
       await api('/api/v1/admin/login', {
         method: 'POST',
         body: JSON.stringify({
+          username: $('username').value.trim(),
           password: $('pw').value
         })
       })
     ).token;
+    localStorage.setItem(ADMIN_TOKEN_KEY, token);
 
     $('pw').value = '';
     $('login').classList.add('d-none');
@@ -213,9 +218,37 @@ $('loginForm').onsubmit = async e => {
 
 $('logout').onclick = () => {
   token = '';
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
   $('panel').classList.add('d-none');
   $('login').classList.remove('d-none');
 };
+
+async function acceptAdminToken(candidate) {
+  token = candidate;
+  localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  $('login').classList.add('d-none');
+  $('panel').classList.remove('d-none');
+  try {
+    await load();
+    await loadOrders();
+    msg('Đăng nhập thành công', 'success');
+  } catch (error) {
+    token = '';
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    $('panel').classList.add('d-none');
+    $('login').classList.remove('d-none');
+    msg(error.message, 'danger');
+  }
+}
+
+const fragment = new URLSearchParams(location.hash.slice(1));
+const fragmentToken = fragment.get('adminToken');
+if (fragmentToken) {
+  history.replaceState(null, '', location.pathname + location.search);
+  void acceptAdminToken(fragmentToken);
+} else if (token) {
+  void acceptAdminToken(token);
+}
 
 $('file').onchange = async () => {
   const f = $('file').files[0];
