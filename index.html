@@ -597,7 +597,11 @@
             <section style="background:#fff;width:min(420px,100%);padding:28px;box-shadow:0 18px 60px #0003;position:relative">
               <button type="button" aria-label="Đóng" id="accountClose" style="position:absolute;right:14px;top:10px;border:0;background:none;font-size:26px">×</button>
               <div style="font-size:11px;letter-spacing:2px;font-weight:800;color:#666">DK FASHION</div>
-              <h2 id="accountHeading" style="font-size:23px;font-weight:900;margin:8px 0 18px">ĐĂNG NHẬP HỆ THỐNG</h2>
+              <h2 id="accountHeading" style="font-size:23px;font-weight:900;margin:8px 0 18px">ĐĂNG NHẬP</h2>
+              <div style="display:flex;gap:8px;margin-bottom:16px">
+                <button id="customerMode" type="button" style="flex:1;padding:10px;border:1px solid #111;background:#111;color:#fff;font-weight:800">KHÁCH HÀNG</button>
+                <button id="adminMode" type="button" style="flex:1;padding:10px;border:1px solid #111;background:#fff;color:#111;font-weight:800">QUẢN TRỊ</button>
+              </div>
               <form id="realLoginForm">
                 <div id="accountNameWrap" style="display:none"><label for="accountName" style="display:block;font-size:13px;margin-bottom:5px">Họ và tên</label><input id="accountName" autocomplete="name" style="width:100%;padding:11px;border:1px solid #ccc;margin-bottom:13px" minlength="2" maxlength="120"></div>
                 <label for="emailInput" style="display:block;font-size:13px;margin-bottom:5px">Email</label>
@@ -607,7 +611,7 @@
                 <div id="accountError" role="alert" style="display:none;color:#b42318;font-size:13px;margin-bottom:12px"></div>
                 <button id="accountSubmit" type="submit" style="width:100%;padding:12px;background:#111;color:#fff;border:0;font-weight:800;letter-spacing:.5px">ĐĂNG NHẬP</button>
               </form>
-              <p style="font-size:13px;text-align:center;margin:16px 0 0"><span id="accountSwitchText">Bạn chưa có tài khoản?</span> <button id="accountSwitch" type="button" style="border:0;background:none;text-decoration:underline;font-weight:700">Đăng ký</button></p>
+              <p id="accountSwitchRow" style="font-size:13px;text-align:center;margin:16px 0 0"><span id="accountSwitchText">Bạn chưa có tài khoản?</span> <button id="accountSwitch" type="button" style="border:0;background:none;text-decoration:underline;font-weight:700">Đăng ký</button></p>
               <p style="font-size:11px;color:#777;margin:12px 0 0">Tài khoản khách hàng và tài khoản quản trị có quyền truy cập khác nhau.</p>
             </section>
           </div>`;
@@ -615,11 +619,30 @@
         let registerMode = false;
         const $account = id => document.getElementById(id);
         $account('accountClose').onclick = () => $account('customLoginModal').remove();
+        const setLoginMode = isAdmin => {
+          adminMode = isAdmin; registerMode = false;
+          $account('customerMode').style.background = isAdmin ? '#fff' : '#111';
+          $account('customerMode').style.color = isAdmin ? '#111' : '#fff';
+          $account('adminMode').style.background = isAdmin ? '#111' : '#fff';
+          $account('adminMode').style.color = isAdmin ? '#fff' : '#111';
+          $account('accountNameWrap').style.display = 'none';
+          $account('accountName').required = false;
+          $account('accountSwitchRow').style.display = isAdmin ? 'none' : 'block';
+          $account('emailLabel').textContent = isAdmin ? 'Tên tài khoản hoặc email Admin' : 'Email';
+          $account('emailInput').placeholder = isAdmin ? 'admin@fashionstore.id.vn' : 'you@example.com';
+          $account('emailInput').type = 'text';
+          $account('accountHeading').textContent = isAdmin ? 'ĐĂNG NHẬP QUẢN TRỊ' : 'ĐĂNG NHẬP KHÁCH HÀNG';
+          $account('accountSubmit').textContent = 'ĐĂNG NHẬP';
+          $account('passwordInput').minLength = 1;
+          $account('accountError').style.display = 'none';
+        };
+        $account('customerMode').onclick = () => setLoginMode(false);
+        $account('adminMode').onclick = () => setLoginMode(true);
         $account('accountSwitch').onclick = () => {
           registerMode = !registerMode;
           $account('accountNameWrap').style.display = registerMode ? 'block' : 'none';
           $account('accountName').required = registerMode;
-          $account('accountHeading').textContent = registerMode ? 'TẠO TÀI KHOẢN' : 'ĐĂNG NHẬP HỆ THỐNG';
+          $account('accountHeading').textContent = registerMode ? 'TẠO TÀI KHOẢN' : 'ĐĂNG NHẬP KHÁCH HÀNG';
           $account('accountSubmit').textContent = registerMode ? 'ĐĂNG KÝ' : 'ĐĂNG NHẬP';
           $account('accountSwitchText').textContent = registerMode ? 'Bạn đã có tài khoản?' : 'Bạn chưa có tài khoản?';
           $account('accountSwitch').textContent = registerMode ? 'Đăng nhập' : 'Đăng ký';
