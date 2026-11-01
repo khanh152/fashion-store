@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -33,12 +34,26 @@ if (!process.env.ADMIN_PASSWORD_HASH) {
   throw new Error('Set ADMIN_PASSWORD_HASH; see README.md');
 }
 
-const origins = (process.env.FRONTEND_ORIGIN || 'https://fashionstore.id.vn')
-  .split(',')
-  .map((x) => x.trim());
+/*
+|--------------------------------------------------------------------------
+| ALLOWED FRONTEND ORIGINS
+|--------------------------------------------------------------------------
+*/
+
+const origins = [
+  ...(
+    process.env.FRONTEND_ORIGIN ||
+    'https://fashionstore.id.vn,https://www.fashionstore.id.vn'
+  )
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean),
+
+  'https://fashionstore.id.vn',
+  'https://www.fashionstore.id.vn',
+];
 
 app.disable('x-powered-by');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -57,21 +72,21 @@ app.use(
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
-          "https://cdn.jsdelivr.net",
+          'https://cdn.jsdelivr.net',
         ],
 
-        imgSrc: ["'self'", "data:", "https:"],
+        imgSrc: ["'self'", 'data:', 'https:'],
 
         connectSrc: [
           "'self'",
-          "https://fashion-store-in8c.onrender.com",
-          "https://fashionstore.id.vn",
+          'https://fashion-store-in8c.onrender.com',
+          'https://fashionstore.id.vn',
+          'https://www.fashionstore.id.vn',
         ],
       },
     },
   })
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -81,15 +96,30 @@ app.use(
 
 app.use(
   cors({
-    origin(o, cb) {
-      if (!o || origins.includes(o)) {
-        return cb(null, true);
+    origin(origin, callback) {
+      if (!origin || origins.includes(origin)) {
+        return callback(null, true);
       }
 
-      cb(new Error('Origin not allowed'));
+      return callback(new Error('Origin not allowed'));
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+
+    methods: [
+      'GET',
+      'HEAD',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
+
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+    ],
+
+    optionsSuccessStatus: 204,
   })
 );
 
@@ -491,6 +521,459 @@ app.delete('/api/v1/admin/products/:id', auth, async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
+| AUTH API
+|--------------------------------------------------------------------------
+*/
+
+const customerAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(['/api/auth/login', '/api/auth/register'], customerAuthLimiter);
+
+const customerToken = (user) =>
+  jwt.sign(
+    {
+      sub: String(user.id),
+      role: user.role || 'customer',
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '12h',
+      issuer: 'dk-fashion',
+    }
+  );
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER REGISTER
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/auth/register', async (req, res) => {
+  const name = String(req.body?.name || '').trim();
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const password = req.body?.password;
+
+  if (
+    name.length < 2 ||
+    name.length > 120 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    typeof password !== 'string' ||
+    password.length < 8 ||
+    password.length > 200
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Vui lòng nhập tên, email hợp lệ và mật khẩu từ 8 ký tự.',
+    });
+  }
+
+  try {
+    const hash = await bcrypt.hash(password, 12);
+
+    const { rows } = await pool.query(
+      `INSERT INTO users(name,email,password,role)
+       VALUES($1,$2,$3,'customer')
+       RETURNING id,name,email,role`,
+      [name, email, hash]
+    );
+
+    const user = rows[0];
+
+    return res.status(201).json({
+      success: true,
+      user,
+      token: customerToken(user),
+    });
+  } catch (e) {
+    if (e.code === '23505') {
+      return res.status(409).json({
+        success: false,
+        message: 'Email này đã được đăng ký.',
+      });
+    }
+
+    return fail(res, e);
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER LOGIN
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/auth/login', async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const password = req.body?.password;
+
+  if (!email || typeof password !== 'string' || password.length > 200) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email hoặc mật khẩu không hợp lệ.',
+    });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'SELECT id,name,email,password,role FROM users WHERE email=$1 LIMIT 1',
+      [email]
+    );
+
+    if (!rows.length) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email hoặc mật khẩu không chính xác.',
+      });
+    }
+
+    const userRow = rows[0];
+    let valid = false;
+
+    // One-time migration support for legacy sample records stored as plain text.
+    // Hash immediately on successful login.
+    if (/^\$2[aby]\$/.test(userRow.password)) {
+      valid = await bcrypt.compare(password, userRow.password);
+    } else if (userRow.password === password) {
+      valid = true;
+
+      const upgraded = await bcrypt.hash(password, 12);
+
+      await pool.query(
+        'UPDATE users SET password=$1,updated_at=NOW() WHERE id=$2',
+        [upgraded, userRow.id]
+      );
+    }
+
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email hoặc mật khẩu không chính xác.',
+      });
+    }
+
+    const user = {
+      id: userRow.id,
+      name: userRow.name,
+      email: userRow.email,
+      role: userRow.role,
+    };
+
+    return res.json({
+      success: true,
+      user,
+      token: customerToken(user),
+    });
+  } catch (e) {
+    return fail(res, e);
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| GUEST COD CHECKOUT
+|--------------------------------------------------------------------------
+| Product prices and stock are resolved server-side.
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/v1/orders', async (req, res) => {
+  const customer = req.body?.customer || {};
+  const items = req.body?.items;
+
+  const name = String(customer.name || '').trim();
+  const phone = String(customer.phone || '').trim();
+  const address = String(customer.address || '').trim();
+  const note = String(customer.note || '').trim();
+
+  if (
+    name.length < 2 ||
+    name.length > 120 ||
+    !/^[0-9+() .-]{9,20}$/.test(phone) ||
+    address.length < 5 ||
+    address.length > 250 ||
+    note.length > 500 ||
+    !Array.isArray(items) ||
+    !items.length ||
+    items.length > 50
+  ) {
+    return res.status(400).json({
+      message: 'Thông tin nhận hàng hoặc giỏ hàng không hợp lệ.',
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    let total = 0;
+    const resolved = [];
+
+    for (const item of items) {
+      const id = Number(item.productId);
+      const qty = Number(item.quantity);
+      const size = String(item.size || '').trim();
+
+      if (
+        !Number.isSafeInteger(id) ||
+        id < 1 ||
+        !Number.isInteger(qty) ||
+        qty < 1 ||
+        qty > 100 ||
+        !size ||
+        size.length > 12
+      ) {
+        throw Object.assign(
+          new Error('Một sản phẩm trong giỏ hàng không hợp lệ.'),
+          { status: 400 }
+        );
+      }
+
+      const result = await client.query(
+        'SELECT id,name,price_vnd,sizes,active FROM products WHERE id=$1 FOR UPDATE',
+        [id]
+      );
+
+      if (!result.rows.length || !result.rows[0].active) {
+        throw Object.assign(
+          new Error('Có sản phẩm không còn được bán.'),
+          { status: 409 }
+        );
+      }
+
+      const product = result.rows[0];
+      const available = Number(product.sizes?.[size] ?? 0);
+
+      if (available < qty) {
+        throw Object.assign(
+          new Error(
+            `Sản phẩm ${product.name} size ${size} không đủ tồn kho.`
+          ),
+          { status: 409 }
+        );
+      }
+
+      total += Number(product.price_vnd) * qty;
+
+      resolved.push({
+        product,
+        size,
+        qty,
+      });
+    }
+
+    const orderResult = await client.query(
+      `INSERT INTO orders
+        (customer_name,customer_phone,customer_address,customer_note,payment_method,status,total_vnd)
+       VALUES
+        ($1,$2,$3,$4,'COD','pending',$5)
+       RETURNING id`,
+      [name, phone, address, note, total]
+    );
+
+    const orderId = orderResult.rows[0].id;
+
+    for (const item of resolved) {
+      await client.query(
+        `INSERT INTO order_items
+          (order_id,product_id,product_name,unit_price_vnd,size,quantity)
+         VALUES
+          ($1,$2,$3,$4,$5,$6)`,
+        [
+          orderId,
+          item.product.id,
+          item.product.name,
+          item.product.price_vnd,
+          item.size,
+          item.qty,
+        ]
+      );
+
+      const nextSizes = {
+        ...item.product.sizes,
+        [item.size]:
+          Number(item.product.sizes[item.size]) - item.qty,
+      };
+
+      await client.query(
+        'UPDATE products SET sizes=$1::jsonb,updated_at=NOW() WHERE id=$2',
+        [JSON.stringify(nextSizes), item.product.id]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    return res.status(201).json({
+      success: true,
+      orderId: String(orderId),
+      orderNumber: `DK-${orderId}`,
+      total,
+    });
+  } catch (e) {
+    await client.query('ROLLBACK');
+
+    if (e.status) {
+      return res.status(e.status).json({
+        message: e.message,
+      });
+    }
+
+    return fail(res, e);
+  } finally {
+    client.release();
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ORDERS
+|--------------------------------------------------------------------------
+*/
+
+app.get('/api/v1/admin/orders', auth, async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         o.*,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'name',i.product_name,
+               'size',i.size,
+               'quantity',i.quantity,
+               'unitPrice',i.unit_price_vnd
+             )
+             ORDER BY i.id
+           ) FILTER (WHERE i.id IS NOT NULL),
+           '[]'::json
+         ) AS items
+       FROM orders o
+       LEFT JOIN order_items i ON i.order_id=o.id
+       GROUP BY o.id
+       ORDER BY o.created_at DESC
+       LIMIT 200`
+    );
+
+    res.json({
+      orders: rows,
+    });
+  } catch (e) {
+    fail(res, e);
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ORDER STATUS UPDATE
+|--------------------------------------------------------------------------
+*/
+
+app.patch('/api/v1/admin/orders/:id/status', auth, async (req, res) => {
+  const allowed = [
+    'pending',
+    'confirmed',
+    'shipping',
+    'completed',
+    'cancelled',
+  ];
+
+  const status = String(req.body?.status || '');
+  const id = Number(req.params.id);
+
+  if (
+    !Number.isSafeInteger(id) ||
+    id < 1 ||
+    !allowed.includes(status)
+  ) {
+    return res.status(400).json({
+      message: 'Mã đơn hoặc trạng thái không hợp lệ.',
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const existing = await client.query(
+      'SELECT id,status FROM orders WHERE id=$1 FOR UPDATE',
+      [id]
+    );
+
+    if (!existing.rows.length) {
+      await client.query('ROLLBACK');
+
+      return res.status(404).json({
+        message: 'Không tìm thấy đơn hàng.',
+      });
+    }
+
+    const oldStatus = existing.rows[0].status;
+
+    if (oldStatus === 'cancelled' && status !== 'cancelled') {
+      await client.query('ROLLBACK');
+
+      return res.status(409).json({
+        message: 'Đơn đã hủy không thể mở lại; vui lòng tạo đơn mới.',
+      });
+    }
+
+    if (status === 'cancelled' && oldStatus !== 'cancelled') {
+      const items = await client.query(
+        `SELECT product_id,size,quantity
+         FROM order_items
+         WHERE order_id=$1 AND product_id IS NOT NULL`,
+        [id]
+      );
+
+      for (const item of items.rows) {
+        const product = await client.query(
+          'SELECT sizes FROM products WHERE id=$1 FOR UPDATE',
+          [item.product_id]
+        );
+
+        if (product.rows.length) {
+          const sizes = {
+            ...product.rows[0].sizes,
+            [item.size]:
+              Number(product.rows[0].sizes?.[item.size] || 0) +
+              Number(item.quantity),
+          };
+
+          await client.query(
+            'UPDATE products SET sizes=$1::jsonb,updated_at=NOW() WHERE id=$2',
+            [JSON.stringify(sizes), item.product_id]
+          );
+        }
+      }
+    }
+
+    const updated = await client.query(
+      'UPDATE orders SET status=$1,updated_at=NOW() WHERE id=$2 RETURNING id,status',
+      [status, id]
+    );
+
+    await client.query('COMMIT');
+
+    return res.json({
+      order: updated.rows[0],
+    });
+  } catch (e) {
+    await client.query('ROLLBACK');
+
+    return fail(res, e);
+  } finally {
+    client.release();
+  }
+});
+
+/*
+|--------------------------------------------------------------------------
 | ERROR HANDLER
 |--------------------------------------------------------------------------
 */
@@ -512,166 +995,6 @@ app.use((e, _q, res, _n) => {
 */
 
 const port = Number(process.env.PORT || 3000);
-/*
-|--------------------------------------------------------------------------
-| AUTH API
-|--------------------------------------------------------------------------
-*/
-const customerAuthLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHeaders: true, legacyHeaders: false });
-app.use(['/api/auth/login', '/api/auth/register'], customerAuthLimiter);
-
-const customerToken = (user) => jwt.sign(
-  { sub: String(user.id), role: user.role || 'customer' },
-  process.env.JWT_SECRET,
-  { expiresIn: '12h', issuer: 'dk-fashion' }
-);
-
-app.post('/api/auth/register', async (req, res) => {
-  const name = String(req.body?.name || '').trim();
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const password = req.body?.password;
-  if (name.length < 2 || name.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8 || password.length > 200) {
-    return res.status(400).json({ success: false, message: 'Vui lòng nhập tên, email hợp lệ và mật khẩu từ 8 ký tự.' });
-  }
-  try {
-    const hash = await bcrypt.hash(password, 12);
-    const { rows } = await pool.query(
-      `INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,'customer') RETURNING id,name,email,role`,
-      [name, email, hash]
-    );
-    const user = rows[0];
-    return res.status(201).json({ success: true, user, token: customerToken(user) });
-  } catch (e) {
-    if (e.code === '23505') return res.status(409).json({ success: false, message: 'Email này đã được đăng ký.' });
-    return fail(res, e);
-  }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const password = req.body?.password;
-  if (!email || typeof password !== 'string' || password.length > 200) {
-    return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không hợp lệ.' });
-  }
-  try {
-    const { rows } = await pool.query('SELECT id,name,email,password,role FROM users WHERE email=$1 LIMIT 1', [email]);
-    if (!rows.length) return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không chính xác.' });
-    const userRow = rows[0];
-    let valid = false;
-    // One-time migration support for legacy sample records stored as plain text: hash immediately on successful login.
-    if (/^\$2[aby]\$/.test(userRow.password)) {
-      valid = await bcrypt.compare(password, userRow.password);
-    } else if (userRow.password === password) {
-      valid = true;
-      const upgraded = await bcrypt.hash(password, 12);
-      await pool.query('UPDATE users SET password=$1,updated_at=NOW() WHERE id=$2', [upgraded, userRow.id]);
-    }
-    if (!valid) return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không chính xác.' });
-    const user = { id: userRow.id, name: userRow.name, email: userRow.email, role: userRow.role };
-    return res.json({ success: true, user, token: customerToken(user) });
-  } catch (e) {
-    return fail(res, e);
-  }
-});
-
-// Guest COD checkout. Product prices and availability are resolved server-side, never trusted from browser data.
-app.post('/api/v1/orders', async (req, res) => {
-  const customer = req.body?.customer || {};
-  const items = req.body?.items;
-  const name = String(customer.name || '').trim();
-  const phone = String(customer.phone || '').trim();
-  const address = String(customer.address || '').trim();
-  const note = String(customer.note || '').trim();
-  if (name.length < 2 || name.length > 120 || !/^[0-9+() .-]{9,20}$/.test(phone) || address.length < 5 || address.length > 250 || note.length > 500 || !Array.isArray(items) || !items.length || items.length > 50) {
-    return res.status(400).json({ message: 'Thông tin nhận hàng hoặc giỏ hàng không hợp lệ.' });
-  }
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    let total = 0;
-    const resolved = [];
-    for (const item of items) {
-      const id = Number(item.productId);
-      const qty = Number(item.quantity);
-      const size = String(item.size || '').trim();
-      if (!Number.isSafeInteger(id) || id < 1 || !Number.isInteger(qty) || qty < 1 || qty > 100 || !size || size.length > 12) {
-        throw Object.assign(new Error('Một sản phẩm trong giỏ hàng không hợp lệ.'), { status: 400 });
-      }
-      const result = await client.query('SELECT id,name,price_vnd,sizes,active FROM products WHERE id=$1 FOR UPDATE', [id]);
-      if (!result.rows.length || !result.rows[0].active) throw Object.assign(new Error('Có sản phẩm không còn được bán.'), { status: 409 });
-      const product = result.rows[0];
-      const available = Number(product.sizes?.[size] ?? 0);
-      if (available < qty) throw Object.assign(new Error(`Sản phẩm ${product.name} size ${size} không đủ tồn kho.`), { status: 409 });
-      total += Number(product.price_vnd) * qty;
-      resolved.push({ product, size, qty });
-    }
-    const orderResult = await client.query(
-      `INSERT INTO orders(customer_name,customer_phone,customer_address,customer_note,payment_method,status,total_vnd)
-       VALUES($1,$2,$3,$4,'COD','pending',$5) RETURNING id`,
-      [name, phone, address, note, total]
-    );
-    const orderId = orderResult.rows[0].id;
-    for (const item of resolved) {
-      await client.query(
-        `INSERT INTO order_items(order_id,product_id,product_name,unit_price_vnd,size,quantity)
-         VALUES($1,$2,$3,$4,$5,$6)`,
-        [orderId, item.product.id, item.product.name, item.product.price_vnd, item.size, item.qty]
-      );
-      const nextSizes = { ...item.product.sizes, [item.size]: Number(item.product.sizes[item.size]) - item.qty };
-      await client.query('UPDATE products SET sizes=$1::jsonb,updated_at=NOW() WHERE id=$2', [JSON.stringify(nextSizes), item.product.id]);
-    }
-    await client.query('COMMIT');
-    return res.status(201).json({ success: true, orderId: String(orderId), orderNumber: `DK-${orderId}`, total });
-  } catch (e) {
-    await client.query('ROLLBACK');
-    if (e.status) return res.status(e.status).json({ message: e.message });
-    return fail(res, e);
-  } finally {
-    client.release();
-  }
-});
-
-app.get('/api/v1/admin/orders', auth, async (_req, res) => {
-  try {
-    const { rows } = await pool.query(
-      `SELECT o.*, COALESCE(json_agg(json_build_object('name',i.product_name,'size',i.size,'quantity',i.quantity,'unitPrice',i.unit_price_vnd) ORDER BY i.id) FILTER (WHERE i.id IS NOT NULL), '[]'::json) AS items
-       FROM orders o LEFT JOIN order_items i ON i.order_id=o.id GROUP BY o.id ORDER BY o.created_at DESC LIMIT 200`
-    );
-    res.json({ orders: rows });
-  } catch (e) { fail(res, e); }
-});
-
-app.patch('/api/v1/admin/orders/:id/status', auth, async (req, res) => {
-  const allowed = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'];
-  const status = String(req.body?.status || '');
-  const id = Number(req.params.id);
-  if (!Number.isSafeInteger(id) || id < 1 || !allowed.includes(status)) return res.status(400).json({ message: 'Mã đơn hoặc trạng thái không hợp lệ.' });
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const existing = await client.query('SELECT id,status FROM orders WHERE id=$1 FOR UPDATE', [id]);
-    if (!existing.rows.length) { await client.query('ROLLBACK'); return res.status(404).json({ message: 'Không tìm thấy đơn hàng.' }); }
-    const oldStatus = existing.rows[0].status;
-    if (oldStatus === 'cancelled' && status !== 'cancelled') {
-      await client.query('ROLLBACK');
-      return res.status(409).json({ message: 'Đơn đã hủy không thể mở lại; vui lòng tạo đơn mới.' });
-    }
-    if (status === 'cancelled' && oldStatus !== 'cancelled') {
-      const items = await client.query('SELECT product_id,size,quantity FROM order_items WHERE order_id=$1 AND product_id IS NOT NULL', [id]);
-      for (const item of items.rows) {
-        const product = await client.query('SELECT sizes FROM products WHERE id=$1 FOR UPDATE', [item.product_id]);
-        if (product.rows.length) {
-          const sizes = { ...product.rows[0].sizes, [item.size]: Number(product.rows[0].sizes?.[item.size] || 0) + Number(item.quantity) };
-          await client.query('UPDATE products SET sizes=$1::jsonb,updated_at=NOW() WHERE id=$2', [JSON.stringify(sizes), item.product_id]);
-        }
-      }
-    }
-    const updated = await client.query('UPDATE orders SET status=$1,updated_at=NOW() WHERE id=$2 RETURNING id,status', [status,id]);
-    await client.query('COMMIT');
-    return res.json({ order: updated.rows[0] });
-  } catch (e) { await client.query('ROLLBACK'); return fail(res,e); }
-  finally { client.release(); }
-});
 
 app.listen(port, () => {
   console.log(`DK FASHION API listening on ${port}`);
