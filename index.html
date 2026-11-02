@@ -680,6 +680,17 @@
             { value: 'accessories', label: productTypeLabels.accessories, type: 'subcategory' }
           ];
         } else {
+             options = [
+            { value: 'all', label: 'T\u1ea4T C\u1ea2', type: 'all' },
+            { value: 'Nam', label: 'NAM', type: 'department' },
+            { value: departmentValues.nu, label: 'N\u1eee', type: 'department' },
+            { value: departmentValues['tre-em'], label: 'TR\u1eba EM', type: 'department' },
+            
+            { value: 'Ch\u1ea1y b\u1ed9', label: 'Ch\u1ea1y b\u1ed9', type: 'category' },
+            { value: 'Lifestyle', label: 'Lifestyle', type: 'category' },
+            { value: 'sale', label: 'Gi\u00e1 t\u1ed1t', type: 'category' }
+          ];
+        }
           
         categoryPills.innerHTML = options.map(item => {
           const selected = item.type === 'department'
