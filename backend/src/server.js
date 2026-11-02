@@ -14,6 +14,11 @@ import { fileURLToPath } from 'node:url';
 const { Pool } = pg;
 const app = express();
 
+// Render places one load-balancer hop directly in front of the web service.
+// Trust only that hop so Express/rate-limit can use the forwarded client IP
+// without trusting an arbitrary X-Forwarded-For chain from the public client.
+app.set('trust proxy', 1);
+
 const backendDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const pool = new Pool({
@@ -204,6 +209,7 @@ const shape = (r) => ({
   description: r.description,
   image: r.image_data_url,
   sizes: r.sizes,
+  active: r.active,
 
   stock: Object.values(r.sizes || {}).reduce(
     (a, n) => a + Number(n || 0),
@@ -525,6 +531,29 @@ app.delete('/api/v1/admin/products/:id', auth, async (req, res) => {
     }
 
     res.status(204).end();
+  } catch (e) {
+    fail(res, e);
+  }
+});
+
+app.patch('/api/v1/admin/products/:id/restore', auth, async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    return res.status(400).json({ message: 'Mã sản phẩm không hợp lệ.' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'UPDATE products SET active=TRUE,updated_at=NOW() WHERE id=$1 AND active=FALSE RETURNING *',
+      [id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Không tìm thấy sản phẩm đã lưu trữ.' });
+    }
+
+    res.json({ product: shape(rows[0]) });
   } catch (e) {
     fail(res, e);
   }
