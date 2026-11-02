@@ -193,76 +193,32 @@ const schema = z.object({
     ),
 });
 
-const promotionSchema = z.object({
-  enabled: z.boolean(),
-  salePrice: z.coerce.number().int().min(0).max(1000000000).optional(),
-  startsAt: z.string().datetime({ offset: true }).optional(),
-  endsAt: z.string().datetime({ offset: true }).optional(),
-});
-
 /*
 |--------------------------------------------------------------------------
 | PRODUCT RESPONSE FORMAT
 |--------------------------------------------------------------------------
 */
 
-function shape(r, { applyPromotion = false } = {}) {
-  const basePrice = Number(r.price_vnd || 0);
-  const salePrice = r.promo_sale_price_vnd == null
-    ? null
-    : Number(r.promo_sale_price_vnd);
-  const startsAt = r.promo_starts_at || null;
-  const endsAt = r.promo_ends_at || null;
-  const enabled = r.promo_enabled === true;
-  const now = Date.now();
-  const activePromotion = enabled && salePrice !== null && salePrice < basePrice &&
-    startsAt && endsAt && Date.parse(startsAt) <= now && now < Date.parse(endsAt);
-  const stock = Object.values(r.sizes || {}).reduce(
-    (sum, quantity) => sum + Number(quantity || 0),
+const shape = (r) => ({
+  id: String(r.id),
+  title: r.name,
+  name: r.name,
+  price: r.price_vnd,
+  category: r.category,
+  audience: r.audience,
+  description: r.description,
+  image: r.image_data_url,
+  sizes: r.sizes,
+  active: r.active,
+
+  stock: Object.values(r.sizes || {}).reduce(
+    (a, n) => a + Number(n || 0),
     0
-  );
+  ),
 
-  return {
-    id: String(r.id),
-    title: r.name,
-    name: r.name,
-    price: applyPromotion && activePromotion ? salePrice : basePrice,
-    basePrice,
-    oldPrice: activePromotion ? basePrice : null,
-    salePrice,
-    discountPercent: activePromotion
-      ? Number((((basePrice - salePrice) / basePrice) * 100).toFixed(2))
-      : 0,
-    activePromotion: Boolean(activePromotion),
-    promotion: salePrice === null ? null : {
-      enabled,
-      salePrice,
-      startsAt,
-      endsAt,
-    },
-    category: r.category,
-    audience: r.audience,
-    description: r.description,
-    image: r.image_data_url,
-    sizes: r.sizes,
-    active: r.active,
-    stock,
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
-    unitsSold: Number(r.units_sold || 0),
-  };
-}
-
-const productWithPromotionSql = `
-  SELECT p.*,
-         pr.sale_price_vnd AS promo_sale_price_vnd,
-         pr.starts_at AS promo_starts_at,
-         pr.ends_at AS promo_ends_at,
-         pr.enabled AS promo_enabled
-  FROM products p
-  LEFT JOIN product_promotions pr ON pr.product_id=p.id`;
-
-const reportableOrderStatuses = ['confirmed', 'shipping', 'completed'];
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -418,44 +374,11 @@ app.post('/api/v1/admin/login', async (req, res) => {
 app.get('/api/v1/products', async (_q, res) => {
   try {
     const { rows } = await pool.query(
-      `${productWithPromotionSql}
-       WHERE p.active=TRUE
-       ORDER BY p.updated_at DESC,p.id DESC`
+      'SELECT * FROM products WHERE active=TRUE ORDER BY updated_at DESC,id DESC'
     );
 
     res.set('Cache-Control', 'no-store').json({
-      products: rows.map((row) => shape(row, { applyPromotion: true })),
-    });
-  } catch (e) {
-    fail(res, e);
-  }
-});
-
-app.get('/api/v1/products/bestsellers', async (_req, res) => {
-  try {
-    const { rows } = await pool.query(
-      `SELECT p.*,
-              pr.sale_price_vnd AS promo_sale_price_vnd,
-              pr.starts_at AS promo_starts_at,
-              pr.ends_at AS promo_ends_at,
-              pr.enabled AS promo_enabled,
-              SUM(i.quantity)::INTEGER AS units_sold
-       FROM products p
-       JOIN order_items i ON i.product_id=p.id
-       JOIN orders o ON o.id=i.order_id
-       LEFT JOIN product_promotions pr ON pr.product_id=p.id
-       WHERE p.active=TRUE AND o.status=ANY($1::text[])
-       GROUP BY p.id,pr.sale_price_vnd,pr.starts_at,pr.ends_at,pr.enabled
-       HAVING SUM(i.quantity)>0
-       ORDER BY SUM(i.quantity) DESC,p.id DESC
-       LIMIT 100`,
-      [reportableOrderStatuses]
-    );
-    res.set('Cache-Control', 'no-store').json({
-      products: rows.map((row) => ({
-        ...shape(row, { applyPromotion: true }),
-        badge: 'BEST SELLER',
-      })),
+      products: rows.map(shape),
     });
   } catch (e) {
     fail(res, e);
@@ -471,101 +394,11 @@ app.get('/api/v1/products/bestsellers', async (_req, res) => {
 app.get('/api/v1/admin/products', auth, async (_q, res) => {
   try {
     const { rows } = await pool.query(
-      `${productWithPromotionSql}
-       ORDER BY p.updated_at DESC,p.id DESC`
+      'SELECT * FROM products ORDER BY updated_at DESC,id DESC'
     );
 
     res.json({
-      products: rows.map((row) => shape(row)),
-    });
-  } catch (e) {
-    fail(res, e);
-  }
-});
-
-app.get('/api/v1/admin/dashboard', auth, async (req, res) => {
-  const period = ['day', 'week', 'month'].includes(req.query.period)
-    ? req.query.period
-    : 'day';
-  const periodConfig = {
-    day: { trunc: 'day', lookback: '30 days' },
-    week: { trunc: 'week', lookback: '12 weeks' },
-    month: { trunc: 'month', lookback: '12 months' },
-  }[period];
-
-  try {
-    const [summary, sales, products, chart, topProducts] = await Promise.all([
-      pool.query(
-        `SELECT
-           COALESCE(SUM(total_vnd) FILTER (WHERE status=ANY($1::text[])),0)::BIGINT AS revenue,
-           COALESCE(SUM(total_vnd) FILTER (WHERE status=ANY($1::text[]) AND created_at::date=CURRENT_DATE),0)::BIGINT AS revenue_today,
-           COUNT(*)::INTEGER AS order_count,
-           COUNT(*) FILTER (WHERE status='pending')::INTEGER AS pending_count
-         FROM orders`,
-        [reportableOrderStatuses]
-      ),
-      pool.query(
-        `SELECT COALESCE(SUM(i.quantity),0)::BIGINT AS units
-         FROM order_items i JOIN orders o ON o.id=i.order_id
-         WHERE o.status=ANY($1::text[])`,
-        [reportableOrderStatuses]
-      ),
-      pool.query(
-        `SELECT COUNT(*)::INTEGER AS active_count,
-                COUNT(*) FILTER (WHERE inventory.total<=3)::INTEGER AS low_stock_count
-         FROM products p
-         CROSS JOIN LATERAL (
-           SELECT COALESCE(SUM(value::INTEGER),0) AS total
-           FROM jsonb_each_text(p.sizes)
-         ) inventory
-         WHERE p.active=TRUE`
-      ),
-      pool.query(
-        `SELECT date_trunc('${periodConfig.trunc}',created_at) AS bucket,
-                COALESCE(SUM(total_vnd),0)::BIGINT AS revenue
-         FROM orders
-         WHERE status=ANY($1::text[])
-           AND created_at >= NOW()-$2::interval
-         GROUP BY bucket ORDER BY bucket`,
-        [reportableOrderStatuses, periodConfig.lookback]
-      ),
-      pool.query(
-        `SELECT i.product_id,
-                COALESCE(p.name,i.product_name) AS product_name,
-                SUM(i.quantity)::BIGINT AS units_sold,
-                COALESCE(SUM(i.quantity::BIGINT*i.unit_price_vnd),0)::BIGINT AS revenue
-         FROM order_items i JOIN orders o ON o.id=i.order_id
-         LEFT JOIN products p ON p.id=i.product_id
-         WHERE o.status=ANY($1::text[])
-         GROUP BY i.product_id,COALESCE(p.name,i.product_name)
-         ORDER BY SUM(i.quantity) DESC,SUM(i.quantity::BIGINT*i.unit_price_vnd) DESC
-         LIMIT 5`,
-        [reportableOrderStatuses]
-      ),
-    ]);
-
-    res.set('Cache-Control', 'no-store').json({
-      period,
-      includedStatuses: reportableOrderStatuses,
-      summary: {
-        revenue: Number(summary.rows[0].revenue),
-        revenueToday: Number(summary.rows[0].revenue_today),
-        orderCount: Number(summary.rows[0].order_count),
-        pendingCount: Number(summary.rows[0].pending_count),
-        activeProducts: Number(products.rows[0].active_count),
-        lowStockProducts: Number(products.rows[0].low_stock_count),
-        unitsSold: Number(sales.rows[0].units),
-      },
-      revenueSeries: chart.rows.map((row) => ({
-        date: row.bucket,
-        revenue: Number(row.revenue),
-      })),
-      topProducts: topProducts.rows.map((row) => ({
-        id: row.product_id == null ? null : String(row.product_id),
-        name: row.product_name,
-        unitsSold: Number(row.units_sold),
-        revenue: Number(row.revenue),
-      })),
+      products: rows.map(shape),
     });
   } catch (e) {
     fail(res, e);
@@ -724,75 +557,6 @@ app.patch('/api/v1/admin/products/:id/restore', auth, async (req, res) => {
     res.json({ product: shape(rows[0]) });
   } catch (e) {
     fail(res, e);
-  }
-});
-
-app.put('/api/v1/admin/products/:id/promotion', auth, async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isSafeInteger(id) || id < 1) {
-    return res.status(400).json({ message: 'Mã sản phẩm không hợp lệ.' });
-  }
-  const parsed = promotionSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({
-      message: parsed.error.issues[0]?.message || 'Thông tin ưu đãi không hợp lệ.',
-    });
-  }
-
-  if (!parsed.data.enabled) {
-    try {
-      const result = await pool.query(
-        `UPDATE product_promotions SET enabled=FALSE,updated_at=NOW()
-         WHERE product_id=$1 RETURNING product_id`,
-        [id]
-      );
-      return res.json({ enabled: false, productId: String(id), found: result.rowCount > 0 });
-    } catch (e) {
-      return fail(res, e);
-    }
-  }
-
-  const { salePrice, startsAt, endsAt } = parsed.data;
-  const starts = Date.parse(startsAt || '');
-  const ends = Date.parse(endsAt || '');
-  if (!Number.isFinite(salePrice) || !Number.isFinite(starts) || !Number.isFinite(ends) || starts >= ends) {
-    return res.status(400).json({ message: 'Giá và khoảng thời gian ưu đãi không hợp lệ.' });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const product = await client.query(
-      'SELECT id,price_vnd FROM products WHERE id=$1 FOR UPDATE',
-      [id]
-    );
-    if (!product.rows.length) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm.' });
-    }
-    if (salePrice >= Number(product.rows[0].price_vnd)) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Giá ưu đãi phải thấp hơn giá gốc.' });
-    }
-    const { rows } = await client.query(
-      `INSERT INTO product_promotions(product_id,sale_price_vnd,starts_at,ends_at,enabled)
-       VALUES($1,$2,$3,$4,TRUE)
-       ON CONFLICT(product_id) DO UPDATE SET
-         sale_price_vnd=EXCLUDED.sale_price_vnd,
-         starts_at=EXCLUDED.starts_at,
-         ends_at=EXCLUDED.ends_at,
-         enabled=TRUE,
-         updated_at=NOW()
-       RETURNING product_id,sale_price_vnd,starts_at,ends_at,enabled`,
-      [id, salePrice, new Date(starts).toISOString(), new Date(ends).toISOString()]
-    );
-    await client.query('COMMIT');
-    return res.json({ promotion: rows[0] });
-  } catch (e) {
-    await client.query('ROLLBACK');
-    return fail(res, e);
-  } finally {
-    client.release();
   }
 });
 
@@ -1024,12 +788,6 @@ app.post('/api/v1/orders', async (req, res) => {
       }
 
       const product = result.rows[0];
-      const promotionResult = await client.query(
-        `SELECT sale_price_vnd,starts_at,ends_at,enabled
-         FROM product_promotions WHERE product_id=$1`,
-        [id]
-      );
-      const promotion = promotionResult.rows[0] || {};
       const available = Number(product.sizes?.[size] ?? 0);
 
       if (available < qty) {
@@ -1041,23 +799,12 @@ app.post('/api/v1/orders', async (req, res) => {
         );
       }
 
-      const basePrice = Number(product.price_vnd);
-      const salePrice = promotion.sale_price_vnd == null
-        ? null
-        : Number(promotion.sale_price_vnd);
-      const now = Date.now();
-      const promotionIsValid = promotion.enabled === true &&
-        salePrice !== null && salePrice < basePrice &&
-        Date.parse(promotion.starts_at) <= now &&
-        now < Date.parse(promotion.ends_at);
-      const unitPrice = promotionIsValid ? salePrice : basePrice;
-      total += unitPrice * qty;
+      total += Number(product.price_vnd) * qty;
 
       resolved.push({
         product,
         size,
         qty,
-        unitPrice,
       });
     }
 
@@ -1082,7 +829,7 @@ app.post('/api/v1/orders', async (req, res) => {
           orderId,
           item.product.id,
           item.product.name,
-          item.unitPrice,
+          item.product.price_vnd,
           item.size,
           item.qty,
         ]

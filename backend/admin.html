@@ -7,20 +7,12 @@
   <title>Quản trị sản phẩm · DK FASHION</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body{font-family:Arial;background:#f5f5f3;color:#171717}
-    .brand{font-weight:900;letter-spacing:.08em}
+    body{font-family:Arial;background:#f4f4f4;color:#111}
+    .brand{font-weight:900}
     .card,.form-control,.form-select,.btn{border-radius:0}
-    .card{border:0;box-shadow:0 5px 22px #0000000a}
+    .card{border:0;box-shadow:0 2px 16px #0000000c}
     .preview{width:72px;height:72px;object-fit:cover;background:#eee}
     .thumb{width:52px;height:52px;object-fit:cover;background:#eee}
-    .dashboard-stat{min-height:124px;border-top:3px solid #111}
-    .dashboard-stat .value{font-size:clamp(1.3rem,2.2vw,2rem);font-weight:850;letter-spacing:-.04em}
-    .dashboard-stat .label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#696969}
-    #revenueChart{width:100%;min-height:210px;display:block;overflow:visible}
-    .chart-grid{stroke:#e7e7e4;stroke-width:1}.chart-line{fill:none;stroke:#111;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chart-point{fill:#fff;stroke:#111;stroke-width:2}
-    .top-item{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #eee}
-    .top-item:last-child{border-bottom:0}
-    @media(max-width:575.98px){.dashboard-stat{min-height:100px}.dashboard-stat .label{font-size:.65rem}.table-responsive{font-size:.84rem}}
   </style>
 </head>
 <body>
@@ -47,36 +39,9 @@
 
   <section id="panel" class="d-none">
     <div class="d-flex justify-content-between mb-3">
-      <div><div class="small text-secondary fw-bold">DK FASHION / ADMIN</div><h1 class="h3 fw-bold mb-0">Tổng quan cửa hàng</h1></div>
+      <h1 class="h3 fw-bold">Quản lý sản phẩm</h1>
       <button id="logout" class="btn btn-outline-dark">Đăng xuất</button>
     </div>
-
-    <section class="mb-4" aria-labelledby="dashboardTitle">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div><h2 id="dashboardTitle" class="h5 fw-bold mb-1">Dashboard</h2><div class="small text-secondary">Doanh thu tính từ đơn đã xác nhận, đang giao hoặc hoàn thành.</div></div>
-        <div class="d-flex align-items-center gap-2">
-          <label class="small d-flex align-items-center gap-2 mb-0">Thống kê theo
-            <select id="dashboardPeriod" class="form-select form-select-sm" aria-label="Chu kỳ biểu đồ doanh thu">
-              <option value="day">Ngày · 30 ngày</option><option value="week">Tuần · 12 tuần</option><option value="month">Tháng · 12 tháng</option>
-            </select>
-          </label>
-          <button id="refreshDashboard" type="button" class="btn btn-outline-dark btn-sm">Làm mới</button>
-        </div>
-      </div>
-      <div id="dashboardError" class="alert alert-warning d-none" role="status"></div>
-      <div class="row g-3 mb-3">
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Tổng doanh thu</div><div id="statRevenue" class="value mt-2">—</div></div></div>
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Doanh thu hôm nay</div><div id="statRevenueToday" class="value mt-2">—</div></div></div>
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Tổng đơn hàng</div><div id="statOrders" class="value mt-2">—</div></div></div>
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Chờ xác nhận</div><div id="statPending" class="value mt-2">—</div></div></div>
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Sản phẩm đang bán</div><div id="statProducts" class="value mt-2">—</div></div></div>
-        <div class="col-6 col-xl-4"><div class="card dashboard-stat p-3"><div class="label">Sắp hết hàng · ≤ 3</div><div id="statLowStock" class="value mt-2">—</div></div></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-lg-8"><div class="card p-3 p-md-4 h-100"><h3 class="h6 fw-bold">Doanh thu theo thời gian</h3><svg id="revenueChart" viewBox="0 0 720 220" role="img" aria-label="Biểu đồ doanh thu"></svg><div id="chartEmpty" class="small text-secondary d-none">Chưa có dữ liệu doanh thu trong khoảng này.</div></div></div>
-        <div class="col-lg-4"><div class="card p-3 p-md-4 h-100"><h3 class="h6 fw-bold">Top 5 sản phẩm bán chạy</h3><div id="topProducts" class="small text-secondary">Đang tải dữ liệu…</div></div></div>
-      </div>
-    </section>
 
     <div class="row g-4">
       <div class="col-lg-5">
@@ -113,17 +78,6 @@
                 </select>
               </div>
             </div>
-
-            <fieldset class="border p-3 my-3">
-              <legend class="float-none w-auto px-2 fs-6 fw-bold">Ưu đãi (không bắt buộc)</legend>
-              <div class="form-check mb-2"><input id="promoEnabled" class="form-check-input" type="checkbox"><label class="form-check-label" for="promoEnabled">Bật ưu đãi theo thời gian</label></div>
-              <div class="row g-2">
-                <div class="col-12 col-md-4"><label class="form-label small" for="promoPrice">Giá ưu đãi (VNĐ)</label><input id="promoPrice" class="form-control" type="number" min="0" step="1" inputmode="numeric"><div id="promoPercent" class="form-text">—</div></div>
-                <div class="col-6 col-md-4"><label class="form-label small" for="promoStartsAt">Bắt đầu</label><input id="promoStartsAt" class="form-control" type="datetime-local"></div>
-                <div class="col-6 col-md-4"><label class="form-label small" for="promoEndsAt">Kết thúc</label><input id="promoEndsAt" class="form-control" type="datetime-local"></div>
-              </div>
-              <div class="form-text mt-2">Giá ưu đãi phải thấp hơn giá gốc. Giá và thời hạn sẽ được kiểm tra lại trên máy chủ.</div>
-            </fieldset>
 
             <label class="form-label mt-3" for="audience">Nh&#243;m kh&#225;ch h&#224;ng *</label>
             <select id="audience" class="form-select mb-3" required>
@@ -183,10 +137,6 @@
               <label class="visually-hidden" for="productAudienceFilter">Lọc theo nhóm khách hàng</label>
               <select id="productAudienceFilter" class="form-select"><option value="">Tất cả nhóm khách hàng</option></select>
             </div>
-            <div class="col-sm-6">
-              <label class="visually-hidden" for="productPromotionFilter">Lọc sản phẩm ưu đãi</label>
-              <select id="productPromotionFilter" class="form-select"><option value="">Tất cả ưu đãi</option><option value="active">Ưu đãi đang hoạt động</option><option value="inactive">Không có ưu đãi hoạt động</option></select>
-            </div>
             <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
               <span id="productCountSummary" class="small text-secondary" aria-live="polite"></span>
               <nav class="d-flex align-items-center gap-2" aria-label="Phân trang sản phẩm">
@@ -217,10 +167,6 @@
             <h2 class="h5 mb-0">Đơn hàng COD</h2>
             <button id="refreshOrders" type="button" class="btn btn-outline-dark btn-sm">Tải lại đơn hàng</button>
           </div>
-          <div class="row g-2 mb-3">
-            <div class="col-md-8"><label class="visually-hidden" for="orderSearch">Tìm đơn hàng</label><input id="orderSearch" class="form-control" type="search" placeholder="Tìm mã đơn, tên hoặc số điện thoại"></div>
-            <div class="col-md-4"><label class="visually-hidden" for="orderStatusFilter">Lọc trạng thái đơn</label><select id="orderStatusFilter" class="form-select"><option value="">Tất cả trạng thái</option><option value="pending">Chờ xác nhận</option><option value="confirmed">Đã xác nhận</option><option value="shipping">Đang giao</option><option value="completed">Hoàn thành</option><option value="cancelled">Đã hủy</option></select></div>
-          </div>
           <div class="table-responsive"><table class="table table-sm align-middle">
             <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
             <tbody id="orderRows"><tr><td colspan="6" class="text-secondary">Đăng nhập để tải đơn hàng.</td></tr></tbody>
@@ -238,7 +184,6 @@ const ADMIN_TOKEN_KEY = 'dkFashionAdminToken';
 let token = localStorage.getItem(ADMIN_TOKEN_KEY) || '';
 let image = '';
 let allProducts = [];
-let allOrders = [];
 let currentProductPage = 1;
 const ADMIN_PAGE_SIZE = 20;
 
@@ -302,7 +247,6 @@ $('loginForm').onsubmit = async e => {
 
     await load();
     await loadOrders();
-    await loadDashboard();
   } catch (e) {
     msg(e.message, 'danger');
   }
@@ -323,7 +267,6 @@ async function acceptAdminToken(candidate) {
   try {
     await load();
     await loadOrders();
-    await loadDashboard();
     msg('Đăng nhập thành công', 'success');
   } catch (error) {
     token = '';
@@ -418,58 +361,21 @@ $('form').onsubmit = async e => {
       sizes: sizes()
     };
 
-    const enabled = $('promoEnabled').checked;
-    let promotion = { enabled: false };
-    if (enabled) {
-      if (!$('promoPrice').value.trim() || !$('promoStartsAt').value || !$('promoEndsAt').value) {
-        throw Error('Nhập giá ưu đãi, thời gian bắt đầu và thời gian kết thúc.');
-      }
-      const startsAt = Date.parse($('promoStartsAt').value);
-      const endsAt = Date.parse($('promoEndsAt').value);
-      const salePrice = Number($('promoPrice').value);
-      if (!Number.isFinite(salePrice) || salePrice < 0 || salePrice >= p.price ||
-          !Number.isFinite(startsAt) || !Number.isFinite(endsAt) || startsAt >= endsAt) {
-        throw Error('Giá ưu đãi phải thấp hơn giá gốc và thời gian bắt đầu phải trước thời gian kết thúc.');
-      }
-      promotion = {
-        enabled: true,
-        salePrice,
-        startsAt: new Date(startsAt).toISOString(),
-        endsAt: new Date(endsAt).toISOString()
-      };
-    }
-
     const id = $('id').value;
 
     const wasEditing = Boolean(id);
     const endpoint = wasEditing
       ? '/api/v1/admin/products/' + encodeURIComponent(id)
       : '/api/v1/admin/products';
-    const saved = await api(endpoint, {
+    await api(endpoint, {
       method: wasEditing ? 'PUT' : 'POST',
       body: JSON.stringify(p)
     });
 
-    let promotionError = '';
-    try {
-      const productId = wasEditing ? id : saved.product.id;
-      await api('/api/v1/admin/products/' + encodeURIComponent(productId) + '/promotion', {
-        method: 'PUT',
-        body: JSON.stringify(promotion)
-      });
-    } catch (error) {
-      promotionError = error.message;
-    }
-
     reset();
     try {
       await load();
-      await loadDashboard();
-      if (promotionError) {
-        msg(`Sản phẩm đã lưu nhưng chưa cập nhật được ưu đãi: ${promotionError}`, 'warning');
-      } else {
-        msg(wasEditing ? 'Đã cập nhật sản phẩm và ưu đãi' : 'Đã thêm sản phẩm', 'success');
-      }
+      msg(wasEditing ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm', 'success');
     } catch (refreshError) {
       msg(
         wasEditing
@@ -493,36 +399,12 @@ function reset() {
   $('imageHelp').textContent = 'Chọn ảnh từ máy.';
   $('formTitle').textContent = 'Thêm sản phẩm';
   $('save').textContent = 'LƯU SẢN PHẨM';
-  $('promoEnabled').checked = false;
-  $('promoPrice').value = '';
-  $('promoStartsAt').value = '';
-  $('promoEndsAt').value = '';
-  syncPromoPercent();
 }
-
-function syncPromoPercent() {
-  const base = Number($('price')?.value);
-  const saleInput = $('promoPrice')?.value.trim();
-  const sale = Number($('promoPrice')?.value);
-  $('promoPercent').textContent = saleInput && base > 0 && Number.isFinite(sale) && sale >= 0 && sale < base
-    ? `Giảm ${(((base - sale) / base) * 100).toFixed(2)}%`
-    : 'Giá ưu đãi phải thấp hơn giá gốc.';
-}
-$('price').addEventListener('input', syncPromoPercent);
-$('promoPrice').addEventListener('input', syncPromoPercent);
 
 $('reset').onclick = reset;
 
 function price(n) {
   return Number(n).toLocaleString('vi-VN') + ' đ';
-}
-
-function localDateTime(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
 }
 
 async function load() {
@@ -552,12 +434,10 @@ function filteredProducts() {
   const query = $('productSearch').value.trim().toLocaleLowerCase('vi');
   const category = $('productCategoryFilter').value;
   const audience = $('productAudienceFilter').value;
-  const promotion = $('productPromotionFilter').value;
   return allProducts.filter(product =>
     (!query || String(product.name || '').toLocaleLowerCase('vi').includes(query)) &&
     (!category || product.category === category) &&
-    (!audience || product.audience === audience) &&
-    (!promotion || (promotion === 'active' ? product.activePromotion === true : product.activePromotion !== true))
+    (!audience || product.audience === audience)
   );
 }
 
@@ -606,15 +486,7 @@ function renderProducts() {
     td1.append(b, small);
 
     const td2 = document.createElement('td');
-    td2.textContent = p.activePromotion
-      ? `${price(p.salePrice)} (gốc ${price(p.price)}) · tồn ${p.stock}`
-      : price(p.price) + ' · tồn ' + p.stock;
-    if (p.activePromotion) {
-      const discount = document.createElement('div');
-      discount.className = 'small text-success fw-bold';
-      discount.textContent = `Ưu đãi ${Number(p.discountPercent).toFixed(2)}%`;
-      td2.append(discount);
-    }
+    td2.textContent = price(p.price) + ' · tồn ' + p.stock;
 
     const td3 = document.createElement('td');
     const edit = document.createElement('button');
@@ -630,11 +502,6 @@ function renderProducts() {
       $('category').value = p.category;
       $('audience').value = p.audience;
       $('desc').value = p.description || '';
-      $('promoEnabled').checked = Boolean(p.promotion?.enabled);
-      $('promoPrice').value = p.promotion?.salePrice ?? '';
-      $('promoStartsAt').value = localDateTime(p.promotion?.startsAt);
-      $('promoEndsAt').value = localDateTime(p.promotion?.endsAt);
-      syncPromoPercent();
 
       $('sizes').value = Object.entries(p.sizes || {})
         .map(([k, v]) => k + ':' + v)
@@ -664,7 +531,6 @@ function renderProducts() {
           });
 
           await load();
-          await loadDashboard();
           msg(restoring ? 'Đã khôi phục sản phẩm' : 'Đã ẩn sản phẩm', 'success');
         } catch (e) {
           msg(e.message, 'danger');
@@ -681,109 +547,23 @@ function renderProducts() {
 $('productSearch').addEventListener('input', () => { currentProductPage = 1; renderProducts(); });
 $('productCategoryFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
 $('productAudienceFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
-$('productPromotionFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
 $('productsPrev').onclick = () => { currentProductPage -= 1; renderProducts(); };
 $('productsNext').onclick = () => { currentProductPage += 1; renderProducts(); };
 
-function formatCount(value) {
-  return Number(value || 0).toLocaleString('vi-VN');
-}
-
-function renderRevenueChart(series) {
-  const svg = $('revenueChart');
-  const empty = $('chartEmpty');
-  svg.replaceChildren();
-  if (!series.length || !series.some(point => Number(point.revenue) > 0)) {
-    svg.classList.add('d-none');
-    empty.classList.remove('d-none');
-    return;
-  }
-  svg.classList.remove('d-none');
-  empty.classList.add('d-none');
-  const ns = 'http://www.w3.org/2000/svg';
-  const width = 720, height = 220, left = 34, right = 12, top = 16, bottom = 28;
-  const max = Math.max(1, ...series.map(point => Number(point.revenue)));
-  for (let line = 0; line < 4; line++) {
-    const y = top + ((height - top - bottom) * line / 3);
-    const grid = document.createElementNS(ns, 'line');
-    grid.setAttribute('x1', left); grid.setAttribute('x2', width - right);
-    grid.setAttribute('y1', y); grid.setAttribute('y2', y); grid.setAttribute('class', 'chart-grid');
-    svg.append(grid);
-  }
-  const points = series.map((point, index) => {
-    const x = series.length === 1 ? (width + left - right) / 2 : left + (width - left - right) * index / (series.length - 1);
-    const y = height - bottom - (Number(point.revenue) / max) * (height - top - bottom);
-    return { x, y, point };
-  });
-  const path = document.createElementNS(ns, 'path');
-  path.setAttribute('class', 'chart-line');
-  path.setAttribute('d', points.map((point, index) => `${index ? 'L' : 'M'}${point.x},${point.y}`).join(' '));
-  svg.append(path);
-  points.forEach(({ x, y, point }) => {
-    const circle = document.createElementNS(ns, 'circle');
-    circle.setAttribute('class', 'chart-point'); circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', 3);
-    const title = document.createElementNS(ns, 'title');
-    title.textContent = `${new Date(point.date).toLocaleDateString('vi-VN')}: ${price(point.revenue)}`;
-    circle.append(title); svg.append(circle);
-  });
-}
-
-async function loadDashboard(period = $('dashboardPeriod').value || 'day') {
-  const error = $('dashboardError');
-  error.classList.add('d-none');
-  try {
-    const data = await api('/api/v1/admin/dashboard?period=' + encodeURIComponent(period));
-    const summary = data.summary;
-    $('statRevenue').textContent = price(summary.revenue);
-    $('statRevenueToday').textContent = price(summary.revenueToday);
-    $('statOrders').textContent = formatCount(summary.orderCount);
-    $('statPending').textContent = formatCount(summary.pendingCount);
-    $('statProducts').textContent = formatCount(summary.activeProducts);
-    $('statLowStock').textContent = formatCount(summary.lowStockProducts);
-    renderRevenueChart(data.revenueSeries || []);
-    const list = $('topProducts');
-    list.replaceChildren();
-    if (!data.topProducts?.length) {
-      list.textContent = 'Chưa có sản phẩm bán trong đơn đã xác nhận.';
-    } else {
-      data.topProducts.forEach((product, index) => {
-        const row = document.createElement('div'); row.className = 'top-item';
-        const name = document.createElement('span'); name.textContent = `${index + 1}. ${product.name}`;
-        const units = document.createElement('strong'); units.textContent = `${formatCount(product.unitsSold)} sp`;
-        row.append(name, units); list.append(row);
-      });
-    }
-  } catch (e) {
-    error.textContent = `Không tải được số liệu thực tế: ${e.message}`;
-    error.classList.remove('d-none');
-    $('topProducts').textContent = 'Không tải được dữ liệu bán chạy.';
-  }
-}
-$('dashboardPeriod').addEventListener('change', () => loadDashboard());
-$('refreshDashboard').addEventListener('click', () => loadDashboard());
-
-function renderOrders() {
+async function loadOrders() {
   const body = $('orderRows');
   body.replaceChildren();
-  const query = $('orderSearch').value.trim().toLocaleLowerCase('vi');
-  const statusFilter = $('orderStatusFilter').value;
-  const orders = allOrders.filter(order => {
-    const searchable = [order.id, order.customer_name, order.customer_phone, order.customer_address,
-      order.customer_note, ...(order.items || []).map(item => item.name)]
-      .join(' ').toLocaleLowerCase('vi');
-    return (!query || searchable.includes(query)) && (!statusFilter || order.status === statusFilter);
-  });
-  if (!orders.length) {
-    const tr = document.createElement('tr'), td = document.createElement('td');
-    td.colSpan = 6; td.className = 'text-center text-secondary py-4';
-    td.textContent = allOrders.length ? 'Không tìm thấy đơn hàng phù hợp.' : 'Chưa có đơn hàng COD.';
-    tr.append(td); body.append(tr); return;
-  }
-  for (const order of orders) {
+  try {
+    const data = await api('/api/v1/admin/orders');
+    if (!data.orders?.length) {
+      const tr = document.createElement('tr'); const td = document.createElement('td');
+      td.colSpan = 6; td.className = 'text-secondary'; td.textContent = 'Chưa có đơn hàng COD.'; tr.append(td); body.append(tr); return;
+    }
+    for (const order of data.orders) {
       const tr = document.createElement('tr');
       const values = [
         `DK-${order.id}`,
-        `${order.customer_name} · ${order.customer_phone}\n${order.customer_address}${order.customer_note ? '\nGhi chú: ' + order.customer_note : ''}`,
+        `${order.customer_name} · ${order.customer_phone}\n${order.customer_address}`,
         (order.items || []).map(i => `${i.name} (${i.size}) ×${i.quantity}`).join(', '),
         price(order.total_vnd)
       ];
@@ -793,25 +573,14 @@ function renderOrders() {
       [['pending','Chờ xác nhận'],['confirmed','Đã xác nhận'],['shipping','Đang giao'],['completed','Hoàn thành'],['cancelled','Đã hủy']].forEach(([v,label])=>{const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=order.status===v;select.append(option);});
       statusCell.append(select); tr.append(statusCell);
       const actionCell=document.createElement('td'); const save=document.createElement('button'); save.className='btn btn-sm btn-dark';save.textContent='Lưu';
-      save.onclick=async()=>{save.disabled=true;try{await api(`/api/v1/admin/orders/${order.id}/status`,{method:'PATCH',body:JSON.stringify({status:select.value})});msg('Đã cập nhật trạng thái đơn hàng','success');await loadOrders();await loadDashboard();}catch(e){msg(e.message,'danger');}finally{save.disabled=false;}};
+      save.onclick=async()=>{save.disabled=true;try{await api(`/api/v1/admin/orders/${order.id}/status`,{method:'PATCH',body:JSON.stringify({status:select.value})});msg('Đã cập nhật trạng thái đơn hàng','success');await loadOrders();}catch(e){msg(e.message,'danger');}finally{save.disabled=false;}};
       actionCell.append(save);tr.append(actionCell);body.append(tr);
-  }
-}
-
-async function loadOrders() {
-  const body = $('orderRows');
-  body.replaceChildren();
-  try {
-    const data = await api('/api/v1/admin/orders');
-    allOrders = Array.isArray(data.orders) ? data.orders : [];
-    renderOrders();
+    }
   } catch (e) {
     const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.className='text-danger';td.textContent=e.message;tr.append(td);body.append(tr);
   }
 }
 $('refreshOrders').onclick = loadOrders;
-$('orderSearch').addEventListener('input', renderOrders);
-$('orderStatusFilter').addEventListener('change', renderOrders);
 
 </script>
 </body>

@@ -338,9 +338,9 @@
                 <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="Nam">NAM</a></li>
                 <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="Nữ">NỮ</a></li>
                 <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="Trẻ em">TRẺ EM</a></li>
-                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="sport">THỂ THAO</a></li>
-                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="bestsellers">BÁN CHẠY</a></li>
-                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="deals">ƯU ĐÃI</a></li>
+                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="Chạy bộ">THỂ THAO</a></li>
+                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="Originals">BỘ SƯU TẬP</a></li>
+                <li class="nav-item"><a class="nav-link category-nav" href="#products" data-category="sale">OUTLET</a></li>
             </ul>
 
             <!-- Right Icons & Search -->
@@ -555,13 +555,6 @@
       let wishlist = new Set(Array.isArray(savedWishlist) ? savedWishlist.map(String) : []);
       let activeCategory = 'all';
       let activeAudience = 'all';
-      let activeCatalogScope = 'all';
-      let activeSpecialFilter = 'all';
-      let bestSellerRank = new Map();
-      let bestSellerLoading = false;
-      let bestSellerError = '';
-      let bestSellerRequest = 0;
-      let promotionRefreshTimer;
       const PRODUCTS_PER_PAGE = 12;
       let currentProductPage = 1;
       let activeProduct = null;
@@ -579,21 +572,15 @@
           products = data.products.map(p => ({
             id: String(p.id), title: p.title || p.name,
             category: p.category || 'Lifestyle', audience: p.audience || 'Nam N\u1eef',
-            price: Number(p.price || 0), basePrice: Number(p.basePrice ?? p.price ?? 0),
-            oldPrice: p.oldPrice == null ? null : Number(p.oldPrice),
+            price: Number(p.price || 0), oldPrice: null,
             badge: Number(p.stock || 0) <= 0 ? 'H\u1ebeT H\xc0NG' : 'M\u1edaI',
             image: p.image, description: p.description || '',
-            sizes: p.sizes || {}, stock: Number(p.stock || 0),
-            activePromotion: p.activePromotion === true,
-            salePrice: p.salePrice == null ? null : Number(p.salePrice),
-            discountPercent: Number(p.discountPercent || 0),
-            promotion: p.promotion || null
+            sizes: p.sizes || {}, stock: Number(p.stock || 0)
           }));
           productLoadError = false;
           productApiAvailable = true;
           currentProductPage = 1;
           renderProducts();
-          schedulePromotionRefresh();
           refreshCartProductIssues();
           updateCartUI();
         } catch (error) {
@@ -608,75 +595,6 @@
             updateCartUI();
           }
         }
-      }
-
-      async function loadBestSellerRanks() {
-        const requestId = ++bestSellerRequest;
-        bestSellerLoading = true;
-        bestSellerError = '';
-        bestSellerRank = new Map();
-        renderProducts();
-        try {
-          const response = await fetch(API_BASE + '/api/v1/products/bestsellers', { cache: 'no-store' });
-          if (!response.ok) throw new Error('Không tải được dữ liệu bán chạy.');
-          const data = await response.json();
-          if (!Array.isArray(data.products)) throw new Error('Dữ liệu bán chạy không hợp lệ.');
-          if (requestId !== bestSellerRequest) return;
-          bestSellerRank = new Map(data.products.map((product, index) => [String(product.id), {
-            rank: index + 1,
-            unitsSold: Number(product.unitsSold || 0)
-          }]));
-        } catch (error) {
-          if (requestId !== bestSellerRequest) return;
-          bestSellerRank = new Map();
-          bestSellerError = error.message;
-        } finally {
-          if (requestId === bestSellerRequest) {
-            bestSellerLoading = false;
-            currentProductPage = 1;
-            renderProducts();
-          }
-        }
-      }
-
-      function isSportProduct(product) {
-        const category = normalizeFacet(product.category);
-        return ['chay bo', 'training', 'lifestyle'].includes(category);
-      }
-
-      function currentProductPrice(product) {
-        const promotion = product.promotion;
-        const basePrice = Number(product.basePrice ?? product.price ?? 0);
-        const salePrice = Number(promotion?.salePrice ?? product.salePrice);
-        const now = Date.now();
-        const startsAt = Date.parse(promotion?.startsAt || '');
-        const endsAt = Date.parse(promotion?.endsAt || '');
-        return promotion?.enabled === true && Number.isFinite(salePrice) && salePrice >= 0 && salePrice < basePrice &&
-          Number.isFinite(startsAt) && startsAt <= now && Number.isFinite(endsAt) && now < endsAt
-          ? salePrice
-          : basePrice;
-      }
-
-      function productHasActivePromotion(product) {
-        return Boolean(product.promotion?.enabled) && currentProductPrice(product) < Number(product.basePrice ?? product.price);
-      }
-
-      function schedulePromotionRefresh() {
-        window.clearTimeout(promotionRefreshTimer);
-        promotionRefreshTimer = undefined;
-        if (activeCatalogScope !== 'deals') return;
-        const now = Date.now();
-        const boundaries = products.flatMap(product => [
-          Date.parse(product.promotion?.startsAt || ''),
-          Date.parse(product.promotion?.endsAt || '')
-        ]).filter(time => Number.isFinite(time) && time > now);
-        if (!boundaries.length) return;
-        promotionRefreshTimer = window.setTimeout(() => {
-          renderProducts();
-          refreshCartProductIssues();
-          updateCartUI();
-          schedulePromotionRefresh();
-        }, Math.min(2147480000, Math.min(...boundaries) - now + 50));
       }
 
       const departmentValues = {
@@ -696,8 +614,7 @@
         all: 'S\u1ea3n ph\u1ea9m n\u1ed5i b\u1eadt',
         nam: 'NAM',
         nu: 'N\u1eee',
-        'tre-em': 'TR\u1eba EM',
-        sport: 'THỂ THAO'
+        'tre-em': 'TR\u1eba EM'
       };
       function normalizeFacet(value) {
         return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0111/g, 'd').toLocaleLowerCase('vi').trim();
@@ -719,7 +636,7 @@
         if (/(^|\s)(giay|shoe|shoes|sneaker|sneakers|boot|boots)(\s|$)/.test(title)) return 'shoes';
         if (/(^|\s)(dep|sandal|sandals|flip flop|flip flops)(\s|$)/.test(title)) return 'sandals';
         if (/(^|\s)(quan|pants|trouser|trousers|jeans)(\s|$)/.test(title)) return 'pants';
-        if (/(^|\s)(vay|dress|dresses|skirt|skirts)(\s|$)/.test(title)) return 'dresses';
+        
         if (/(^|\s)(ao|shirt|shirts|top|tops|hoodie|jacket)(\s|$)/.test(title)) return 'tops';
         if (/(^|\s)(phu kien|accessory|accessories|tui|bag|bags|cap|hat|socks)(\s|$)/.test(title)) return 'accessories';
         return 'other';
@@ -739,67 +656,47 @@
         const heading = document.getElementById('shopHeading');
         const eyebrow = document.getElementById('shopEyebrow');
         const audienceKey = activeAudience === 'all' ? 'all' : normalizeFacet(activeAudience).replace(/\s+/g, '-');
-        const isSportScope = activeCatalogScope === 'sport';
-        const isSpecialScope = ['bestsellers', 'deals'].includes(activeCatalogScope);
-        const sectionTitle = activeCatalogScope === 'bestsellers'
-          ? 'BÁN CHẠY'
-          : activeCatalogScope === 'deals'
-            ? 'ƯU ĐÃI'
-            : isSportScope ? departmentLabels.sport : (departmentLabels[audienceKey] || departmentLabels.all);
-        heading.textContent = sectionTitle;
-        eyebrow.textContent = isSpecialScope || isSportScope
-          ? 'DK FASHION · ' + sectionTitle
-          : audienceKey === 'all'
-            ? 'TÌM PHONG CÁCH CỦA BẠN'
-            : 'DANH MỤC ' + departmentLabels[audienceKey];
+        heading.textContent = departmentLabels[audienceKey] || departmentLabels.all;
+        eyebrow.textContent = audienceKey === 'all' ? 'T\u00ccM PHONG C\u00c1CH C\u1ee6A B\u1ea0N' : 'DANH M\u1ee4C ' + departmentLabels[audienceKey];
         const departments = [
           { value: 'all', label: 'T\u1ea4T C\u1ea2' },
           { value: 'Nam', label: 'NAM' },
           { value: departmentValues.nu, label: 'N\u1eee' },
           { value: departmentValues['tre-em'], label: 'TR\u1eba EM' }
         ];
-        departmentPills.classList.toggle('d-none', audienceKey === 'all' || isSpecialScope || isSportScope);
+        departmentPills.classList.toggle('d-none', audienceKey === 'all');
         departmentPills.innerHTML = departments.map(item =>
           '<button class="category-pill ' + (normalizeFacet(item.value).replace(/\s+/g, '-') === audienceKey ? 'active' : '') + '" type="button" data-category="' + item.value + '" data-category-scope="department">' + item.label + '</button>'
         ).join('');
         let options;
-        if (isSpecialScope) {
-          options = [
-            { value: 'all', label: 'TẤT CẢ', type: 'special-filter' },
-            { value: 'nam', label: 'NAM', type: 'special-filter' },
-            { value: 'nu', label: 'NỮ', type: 'special-filter' },
-            { value: 'tre-em', label: 'TRẺ EM', type: 'special-filter' },
-            { value: 'sport', label: 'THỂ THAO', type: 'special-filter' }
-          ];
-        } else if (audienceKey !== 'all' || isSportScope) {
+        if (audienceKey !== 'all') {
           options = [
             { value: 'all', label: 'T\u1ea4T C\u1ea2', type: 'subcategory' },
             { value: 'shoes', label: productTypeLabels.shoes, type: 'subcategory' },
             { value: 'sandals', label: productTypeLabels.sandals, type: 'subcategory' },
             { value: 'pants', label: productTypeLabels.pants, type: 'subcategory' },
             { value: 'tops', label: productTypeLabels.tops, type: 'subcategory' },
+            ...(audienceKey === 'nu' ? [{ value: 'dresses', label: productTypeLabels.dresses, type: 'subcategory' }] : []),
             { value: 'accessories', label: productTypeLabels.accessories, type: 'subcategory' }
           ];
         } else {
-          options = [
+             options = [
             { value: 'all', label: 'T\u1ea4T C\u1ea2', type: 'all' },
             { value: 'Nam', label: 'NAM', type: 'department' },
             { value: departmentValues.nu, label: 'N\u1eee', type: 'department' },
             { value: departmentValues['tre-em'], label: 'TR\u1eba EM', type: 'department' },
-            { value: 'sport', label: 'THỂ THAO', type: 'scope', mobileOnly: true },
-            { value: 'bestsellers', label: 'BÁN CHẠY', type: 'scope', mobileOnly: true },
-            { value: 'deals', label: 'ƯU ĐÃI', type: 'scope', mobileOnly: true }
+            
+            { value: 'Ch\u1ea1y b\u1ed9', label: 'Ch\u1ea1y b\u1ed9', type: 'category' },
+            { value: 'Lifestyle', label: 'Lifestyle', type: 'category' },
+            { value: 'sale', label: 'Gi\u00e1 t\u1ed1t', type: 'category' }
           ];
         }
+          
         categoryPills.innerHTML = options.map(item => {
           const selected = item.type === 'department'
             ? normalizeFacet(item.value).replace(/\s+/g, '-') === audienceKey
-            : item.type === 'scope'
-              ? activeCatalogScope === item.value
-              : item.type === 'special-filter'
-                ? activeSpecialFilter === item.value
-                : activeCategory === item.value && (item.type === 'subcategory' || audienceKey === 'all');
-          return '<button class="category-pill ' + (selected ? 'active' : '') + (item.mobileOnly ? ' d-md-none' : '') + '" type="button" data-category="' + item.value + '" data-category-scope="' + item.type + '">' + item.label + '</button>';
+            : activeCategory === item.value && (item.type === 'subcategory' || audienceKey === 'all');
+          return '<button class="category-pill ' + (selected ? 'active' : '') + '" type="button" data-category="' + item.value + '" data-category-scope="' + item.type + '">' + item.label + '</button>';
         }).join('');
       }
       function renderProducts() {
@@ -807,82 +704,49 @@
         const query = (document.getElementById('searchInput')?.value || '').trim().toLocaleLowerCase('vi');
         const sort = document.querySelector('input[name="sort"]:checked')?.value || 'default';
         const audienceKey = activeAudience === 'all' ? 'all' : normalizeFacet(activeAudience).replace(/\s+/g, '-');
-        const isSpecialScope = ['bestsellers', 'deals'].includes(activeCatalogScope);
         let list = products.filter(product => {
           const text = [product.title, product.category, product.audience].join(' ').toLocaleLowerCase('vi');
-          const audienceMatch = isSpecialScope
-            ? activeSpecialFilter === 'sport'
-              ? isSportProduct(product)
-              : productMatchesAudience(product, audienceKey)
-            : productMatchesAudience(product, audienceKey);
-          const sectionMatch = activeCatalogScope === 'bestsellers'
-            ? bestSellerRank.has(String(product.id))
-            : activeCatalogScope === 'deals'
-              ? productHasActivePromotion(product)
-              : true;
+          const audienceMatch = productMatchesAudience(product, audienceKey);
           let categoryMatch = activeCategory === 'all';
-          if (Object.hasOwn(productTypeLabels, activeCategory)) categoryMatch = getProductType(product) === activeCategory;
+          if (activeCategory === 'sale') categoryMatch = !!product.oldPrice;
+          else if (Object.hasOwn(productTypeLabels, activeCategory)) categoryMatch = getProductType(product) === activeCategory;
           else if (activeCategory !== 'all') categoryMatch = normalizeFacet(product.category) === normalizeFacet(activeCategory);
-          return sectionMatch && audienceMatch && categoryMatch && text.includes(query);
+          return audienceMatch && categoryMatch && text.includes(query);
         });
-        if (activeCatalogScope === 'bestsellers') {
-          list.sort((a, b) => bestSellerRank.get(String(a.id)).rank - bestSellerRank.get(String(b.id)).rank);
-        } else if (sort === 'price-asc') list.sort((a,b) => currentProductPrice(a)-currentProductPrice(b));
-        else if (sort === 'price-desc') list.sort((a,b) => currentProductPrice(b)-currentProductPrice(a));
+        if (sort === 'price-asc') list.sort((a,b) => a.price-b.price);
+        if (sort === 'price-desc') list.sort((a,b) => b.price-a.price);
         const pageCount = Math.max(1, Math.ceil(list.length / PRODUCTS_PER_PAGE));
         currentProductPage = Math.min(currentProductPage, pageCount);
         const pageStart = (currentProductPage - 1) * PRODUCTS_PER_PAGE;
         const pageProducts = list.slice(pageStart, pageStart + PRODUCTS_PER_PAGE);
         document.getElementById('productCount').textContent = list.length + ' s\u1ea3n ph\u1ea9m';
         const audienceName = departmentLabels[audienceKey] || '';
-        const selectedName = productTypeLabels[activeCategory] || activeCategory;
-        const specialFilterName = activeSpecialFilter === 'sport'
-          ? 'Thể thao'
-          : activeSpecialFilter === 'all' ? 'Tất cả' : departmentLabels[activeSpecialFilter] || '';
+        const selectedName = productTypeLabels[activeCategory] || (activeCategory === 'sale' ? 'Gi\u00e1 t\u1ed1t' : activeCategory);
         document.getElementById('activeFilterLabel').textContent = activeCategory === 'all'
-          ? (activeCatalogScope === 'bestsellers' ? 'Bán chạy · ' + specialFilterName + ' · S\u1eafp x\u1ebfp theo s\u1ed1 l\u01b0\u1ee3ng \u0111\u00e3 b\u00e1n'
-            : activeCatalogScope === 'deals' ? 'Ưu đãi · ' + specialFilterName + ' · \u0110ang c\u00f3 hi\u1ec7u l\u1ef1c'
-              : audienceKey === 'all' ? 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m' : 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m ' + audienceName)
+          ? (audienceKey === 'all' ? 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m' : 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m ' + audienceName)
           : (audienceKey === 'all' ? '' : audienceName + ' \u00b7 ') + 'Danh m\u1ee5c: ' + selectedName;
         if (!list.length) {
           renderProductPagination(0);
-          let emptyMessage;
-          if (activeCatalogScope === 'bestsellers' && bestSellerLoading) {
-            emptyMessage = 'Đang tải dữ liệu bán chạy...';
-          } else if (activeCatalogScope === 'bestsellers' && bestSellerError) {
-            emptyMessage = bestSellerError;
-          } else if (activeSpecialFilter === 'sport' && isSpecialScope) {
-            emptyMessage = activeCatalogScope === 'bestsellers'
-              ? 'Chưa có sản phẩm bán chạy được phân loại Thể thao.'
-              : 'Chưa có sản phẩm ưu đãi được phân loại Thể thao.';
-          } else if (activeCatalogScope === 'bestsellers') {
-            emptyMessage = 'Chưa có sản phẩm bán trong các đơn đã xác nhận.';
-          } else if (activeCatalogScope === 'deals') {
-            emptyMessage = 'Hiện không có sản phẩm ưu đãi đang hoạt động.';
-          } else if (productLoadError) {
-            emptyMessage = 'Không thể tải danh sách sản phẩm từ máy chủ.';
-          } else {
-            emptyMessage = activeCategory === 'all'
-              ? 'Chưa có sản phẩm trong nhóm này.'
-              : 'Chưa có sản phẩm ' + selectedName + '.';
-          }
-          const emptyHint = activeCatalogScope === 'bestsellers' && bestSellerError
-            ? '<p>Vui lòng thử lại.</p><button class="btn btn-dark rounded-0" onclick="loadBestSellerRanks()">TẢI LẠI</button>'
-            : productLoadError
-              ? '<p>Vui lòng thử tải lại.</p><button class="btn btn-dark rounded-0" onclick="loadLiveProducts()">THỬ TẢI LẠI</button>'
-              : '<p>Hãy thử danh mục khác hoặc xóa bộ lọc.</p><button class="btn btn-dark rounded-0" onclick="clearFilters()">XEM TẤT CẢ</button>';
+          const emptyMessage = productLoadError
+            ? 'Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch s\u1ea3n ph\u1ea9m t\u1eeb m\u00e1y ch\u1ee7.'
+            : activeCategory === 'all'
+              ? 'Ch\u01b0a c\u00f3 s\u1ea3n ph\u1ea9m trong nh\u00f3m n\u00e0y.'
+              : 'Ch\u01b0a c\u00f3 s\u1ea3n ph\u1ea9m ' + selectedName + '.';
+          const emptyHint = productLoadError
+            ? '<p>Vui l\u00f2ng th\u1eed t\u1ea3i l\u1ea1i.</p><button class="btn btn-dark rounded-0" onclick="loadLiveProducts()">TH\u1eec T\u1ea2I L\u1ea0I</button>'
+            : '<p>H\u00e3y th\u1eed danh m\u1ee5c kh\u00e1c ho\u1eb7c x\u00f3a b\u1ed9 l\u1ecdc.</p><button class="btn btn-dark rounded-0" onclick="clearFilters()">XEM T\u1ea4T C\u1ea2</button>';
           grid.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass fs-2 mb-3"></i><h5 class="fw-bold">' + emptyMessage + '</h5>' + emptyHint + '</div>';
           return;
         }
         grid.innerHTML = pageProducts.map(p =>
           '<div class="col product-item"><article class="adidas-card h-100">' +
             '<div class="img-wrapper" role="button" tabindex="0" aria-label="Xem ' + escapeHtml(p.title) + '" onclick="openProduct(\'' + p.id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProduct(\'' + p.id + '\');}">' +
-              '<span class="product-badge">' + escapeHtml(activeCatalogScope === 'bestsellers' ? 'BEST SELLER' : productHasActivePromotion(p) ? ('ƯU ĐÃI -' + (((Number(p.basePrice) - currentProductPrice(p)) / Number(p.basePrice)) * 100).toFixed(2) + '%') : p.badge) + '</span>' +
+              '<span class="product-badge">' + escapeHtml(p.badge) + '</span>' +
               '<button class="wishlist-btn" type="button" aria-label="' + (wishlist.has(p.id) ? 'B\u1ecf y\u00eau th\u00edch' : 'Th\u00eam y\u00eau th\u00edch') + '" onclick="event.stopPropagation();toggleWishlist(\'' + p.id + '\')"><i class="' + (wishlist.has(p.id) ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart') + '"></i></button>' +
               '<img loading="lazy" decoding="async" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" onerror="this.onerror=null;this.src=\'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80\';">' +
             '</div><div class="card-info"><div class="product-category">' + escapeHtml(p.category) + ' \u00b7 ' + escapeHtml(p.audience) + '</div>' +
             '<a href="#product-detail" class="product-title" onclick="event.preventDefault();openProduct(\'' + p.id + '\')">' + escapeHtml(p.title) + '</a>' +
-            '<div class="mt-2"><span class="product-price">' + formatPrice(currentProductPrice(p)) + '</span>' + (productHasActivePromotion(p) ? '<span class="old-price">' + formatPrice(p.basePrice) + '</span>' : '') + '</div>' +
+            '<div class="mt-2"><span class="product-price">' + formatPrice(p.price) + '</span>' + (p.oldPrice ? '<span class="old-price">' + formatPrice(p.oldPrice) + '</span>' : '') + '</div>' +
             '<div class="product-actions mt-3"><button class="quick-add" type="button" onclick="addToCart(\'' + p.id + '\')">TH\u00caM V\u00c0O GI\u1ece</button><button class="heart-action" type="button" aria-label="Y\u00eau th\u00edch" onclick="toggleWishlist(\'' + p.id + '\')"><i class="' + (wishlist.has(p.id) ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart') + '"></i></button></div>' +
             '</div></article></div>'
         ).join('');
@@ -919,46 +783,16 @@
       function setCategory(category) {
         currentProductPage = 1;
         const key = normalizeFacet(category).replace(/\s+/g, '-');
-        const loadBestSellers = key === 'bestsellers';
         if (key === 'all') {
-          bestSellerRequest += 1;
-          bestSellerLoading = false;
-          activeCatalogScope = 'all';
-          activeSpecialFilter = 'all';
-          activeAudience = 'all';
-          activeCategory = 'all';
-        } else if (key === 'bestsellers' || key === 'deals') {
-          activeCatalogScope = key;
-          activeSpecialFilter = 'all';
-          activeAudience = 'all';
-          activeCategory = 'all';
-        } else if (key === 'sport' || key === 'the-thao') {
-          activeSpecialFilter = 'all';
-          activeCatalogScope = 'sport';
           activeAudience = 'all';
           activeCategory = 'all';
         } else if (departmentValues[key]) {
-          bestSellerRequest += 1;
-          bestSellerLoading = false;
-          activeSpecialFilter = 'all';
-          activeCatalogScope = 'all';
           activeAudience = departmentValues[key];
           activeCategory = 'all';
         } else {
-          activeCatalogScope = 'all';
           activeAudience = 'all';
           activeCategory = category;
         }
-        renderCategoryNavigation();
-        schedulePromotionRefresh();
-        if (loadBestSellers) loadBestSellerRanks();
-        else renderProducts();
-      }
-      function setSpecialFilter(filter) {
-        activeSpecialFilter = filter || 'all';
-        activeAudience = departmentValues[activeSpecialFilter] || 'all';
-        activeCategory = 'all';
-        currentProductPage = 1;
         renderCategoryNavigation();
         renderProducts();
       }
@@ -994,12 +828,10 @@
             cartProductIssues.set(item.key, 'Sản phẩm đã ngừng bán hoặc được lưu trữ. Hãy xóa khỏi giỏ để tiếp tục.');
             continue;
           }
-          item.price = currentProductPrice(current);
           const sizeStock = Number(current.sizes?.[item.size] ?? 0);
           if (sizeStock <= 0) cartProductIssues.set(item.key, `Size ${item.size} đã hết hàng. Hãy xóa sản phẩm khỏi giỏ.`);
           else if (item.quantity > sizeStock) cartProductIssues.set(item.key, `Size ${item.size} chỉ còn ${sizeStock}. Hãy giảm số lượng.`);
         }
-        safeSave(CART_KEY, cart);
       }
       function addToCart(id, size) {
         const product = products.find(p => p.id === id); if (!product) return;
@@ -1015,7 +847,7 @@
             return;
           }
         }
-        if (item) item.quantity += 1; else cart.push({key, id:product.id, title:product.title, price:currentProductPrice(product), image:product.image, size:chosenSize, quantity:1});
+        if (item) item.quantity += 1; else cart.push({key, id:product.id, title:product.title, price:product.price, image:product.image, size:chosenSize, quantity:1});
         refreshCartProductIssues();
         safeSave(CART_KEY,cart); updateCartUI();
         bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('cartDrawer')).show();
@@ -1090,7 +922,7 @@
           const title = document.createElement('strong');
           title.textContent = product.title;
           const price = document.createElement('div');
-          price.textContent = formatPrice(currentProductPrice(product));
+          price.textContent = formatPrice(product.price);
           details.append(title, price);
           const view = document.createElement('button');
           view.type = 'button';
@@ -1124,7 +956,7 @@
         }
         bootstrap.Modal.getOrCreateInstance(document.getElementById('infoModal')).show();
       }
-      function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;activeProduct=p;const sizeMap=p.sizes||{};const availableSizes=Object.keys(sizeMap).filter(k=>Number(sizeMap[k])>0);selectedSize=availableSizes[0]||'36';document.getElementById('detailImage').src=p.image;document.getElementById('detailImage').alt=p.title;document.getElementById('detailCategory').textContent=`${p.category} · ${p.audience}`;document.getElementById('detailTitle').textContent=p.title;document.getElementById('detailPrice').textContent=formatPrice(currentProductPrice(p));document.getElementById('detailOldPrice').textContent=productHasActivePromotion(p)?formatPrice(p.basePrice):'';document.getElementById('detailDescription').textContent=p.description;const sizeBox=document.getElementById('detailSizes');if(availableSizes.length){sizeBox.innerHTML=availableSizes.map(size=>`<button type="button" class="detail-size ${size===selectedSize?'active':''}" data-size="${escapeHtml(size)}">${escapeHtml(size)}</button>`).join('');sizeBox.querySelectorAll('.detail-size').forEach(b=>b.addEventListener('click',()=>{selectedSize=b.dataset.size;sizeBox.querySelectorAll('.detail-size').forEach(x=>x.classList.toggle('active',x===b));}));}else{sizeBox.querySelectorAll('.detail-size').forEach(b=>b.classList.toggle('active',b.textContent===selectedSize));}updateDetailWishlist();bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailModal')).show();}
+      function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;activeProduct=p;const sizeMap=p.sizes||{};const availableSizes=Object.keys(sizeMap).filter(k=>Number(sizeMap[k])>0);selectedSize=availableSizes[0]||'36';document.getElementById('detailImage').src=p.image;document.getElementById('detailImage').alt=p.title;document.getElementById('detailCategory').textContent=`${p.category} · ${p.audience}`;document.getElementById('detailTitle').textContent=p.title;document.getElementById('detailPrice').textContent=formatPrice(p.price);document.getElementById('detailOldPrice').textContent=p.oldPrice?formatPrice(p.oldPrice):'';document.getElementById('detailDescription').textContent=p.description;const sizeBox=document.getElementById('detailSizes');if(availableSizes.length){sizeBox.innerHTML=availableSizes.map(size=>`<button type="button" class="detail-size ${size===selectedSize?'active':''}" data-size="${escapeHtml(size)}">${escapeHtml(size)}</button>`).join('');sizeBox.querySelectorAll('.detail-size').forEach(b=>b.addEventListener('click',()=>{selectedSize=b.dataset.size;sizeBox.querySelectorAll('.detail-size').forEach(x=>x.classList.toggle('active',x===b));}));}else{sizeBox.querySelectorAll('.detail-size').forEach(b=>b.classList.toggle('active',b.textContent===selectedSize));}updateDetailWishlist();bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailModal')).show();}
       function updateDetailWishlist(){const b=document.getElementById('detailWishlistButton');if(!activeProduct)return;const saved=wishlist.has(activeProduct.id);b.innerHTML=`<i class="${saved?'fa-solid fa-heart text-danger':'fa-regular fa-heart'} me-2"></i>${saved?'ĐÃ LƯU YÊU THÍCH':'THÊM VÀO YÊU THÍCH'}`;}
       function showInfo(title,body){document.getElementById('infoTitle').textContent=title;document.getElementById('infoBody').textContent=body;bootstrap.Modal.getOrCreateInstance(document.getElementById('infoModal')).show();}
       
@@ -1235,7 +1067,7 @@
         };
       }
 
-      function openCheckout(){if(!cart.length){showInfo('GIỎ HÀNG ĐANG TRỐNG','Vui lòng thêm sản phẩm vào giỏ trước khi thanh toán.');return;}refreshCartProductIssues();updateCartUI();document.getElementById('checkoutTotal').textContent='Tổng cộng: '+formatPrice(cart.reduce((s,i)=>s+i.price*i.quantity,0));const msg=document.getElementById('checkoutMessage');msg.className='alert d-none mt-3 mb-0';msg.textContent='';bootstrap.Modal.getOrCreateInstance(document.getElementById('checkoutModal')).show();}
+      function openCheckout(){if(!cart.length){showInfo('GIỎ HÀNG ĐANG TRỐNG','Vui lòng thêm sản phẩm vào giỏ trước khi thanh toán.');return;}document.getElementById('checkoutTotal').textContent='Tổng cộng: '+formatPrice(cart.reduce((s,i)=>s+i.price*i.quantity,0));const msg=document.getElementById('checkoutMessage');msg.className='alert d-none mt-3 mb-0';msg.textContent='';bootstrap.Modal.getOrCreateInstance(document.getElementById('checkoutModal')).show();}
       async function submitOrder(event) {
         event.preventDefault();
         if (!cart.length) return;
@@ -1321,8 +1153,6 @@
         const button=event.target.closest('button[data-category]');
         if(!button)return;
         if(button.dataset.categoryScope==='subcategory')setSubcategory(button.dataset.category);
-        else if(button.dataset.categoryScope==='special-filter')setSpecialFilter(button.dataset.category);
-        else if(button.dataset.categoryScope==='scope')setCategory(button.dataset.category);
         else setCategory(button.dataset.category);
       });
       document.getElementById('departmentPills').addEventListener('click',event=>{
