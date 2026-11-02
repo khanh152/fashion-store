@@ -363,30 +363,35 @@ $('form').onsubmit = async e => {
 
     const id = $('id').value;
 
-    await api(
-      id
-        ? '/api/v1/admin/products/' + id
-        : '/api/v1/admin/products',
-      {
-        method: id ? 'PUT' : 'POST',
-        body: JSON.stringify(p)
-      }
-    );
-
-    msg(
-      id ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm',
-      'success'
-    );
+    const wasEditing = Boolean(id);
+    const endpoint = wasEditing
+      ? '/api/v1/admin/products/' + encodeURIComponent(id)
+      : '/api/v1/admin/products';
+    await api(endpoint, {
+      method: wasEditing ? 'PUT' : 'POST',
+      body: JSON.stringify(p)
+    });
 
     reset();
-    await load();
+    try {
+      await load();
+      msg(wasEditing ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm', 'success');
+    } catch (refreshError) {
+      msg(
+        wasEditing
+          ? `Sản phẩm đã cập nhật nhưng danh sách chưa tải lại được: ${refreshError.message}`
+          : `Sản phẩm đã thêm nhưng danh sách chưa tải lại được: ${refreshError.message}`,
+        'warning'
+      );
+    }
   } catch (e) {
     msg(e.message, 'danger');
   }
 };
 
 function reset() {
-  $('form').reset();
+  const productForm = $('form');
+  HTMLFormElement.prototype.reset.call(productForm);
   $('id').value = '';
   image = '';
 
