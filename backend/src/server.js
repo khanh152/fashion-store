@@ -290,6 +290,7 @@ function fail(res, e) {
 */
 
 app.get('/admin.html', (_req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(join(backendDir, 'admin.html'));
 });
 

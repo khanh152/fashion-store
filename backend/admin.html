@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Quáº£n trá»‹ sáº£n pháº©m Â· DK FASHION</title>
+  <title>Quản trị sản phẩm · DK FASHION</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body{font-family:Arial;background:#f4f4f4;color:#111}
@@ -18,8 +18,8 @@
 <body>
 <header class="bg-white border-bottom py-3">
   <div class="container d-flex justify-content-between">
-    <b class="brand">DK FASHION / QUáº¢N TRá»Š</b>
-    <a href="https://fashionstore.id.vn" class="text-dark">Xem cá»­a hÃ ng â†—</a>
+    <b class="brand">DK FASHION / QUẢN TRỊ</b>
+    <a href="https://fashionstore.id.vn" class="text-dark">Xem cửa hàng ↗</a>
   </div>
 </header>
 
@@ -27,36 +27,36 @@
   <div id="notice" class="alert d-none" role="status"></div>
 
   <section id="login" class="card p-4 mx-auto" style="max-width:460px">
-    <h1 class="h4 fw-bold">ÄÄƒng nháº­p quáº£n trá»‹</h1>
+    <h1 class="h4 fw-bold">Đăng nhập quản trị</h1>
     <form id="loginForm">
-      <label class="form-label" for="username">TÃªn Ä‘Äƒng nháº­p</label>
+      <label class="form-label" for="username">Tên đăng nhập</label>
       <input id="username" class="form-control mb-3" type="text" autocomplete="username" value="admin" required>
-      <label class="form-label" for="pw">Máº­t kháº©u quáº£n trá»‹</label>
+      <label class="form-label" for="pw">Mật khẩu quản trị</label>
       <input id="pw" class="form-control mb-3" type="password" autocomplete="current-password" required>
-      <button class="btn btn-dark w-100">ÄÄ‚NG NHáº¬P</button>
+      <button class="btn btn-dark w-100">ĐĂNG NHẬP</button>
     </form>
   </section>
 
   <section id="panel" class="d-none">
     <div class="d-flex justify-content-between mb-3">
-      <h1 class="h3 fw-bold">Quáº£n lÃ½ sáº£n pháº©m</h1>
-      <button id="logout" class="btn btn-outline-dark">ÄÄƒng xuáº¥t</button>
+      <h1 class="h3 fw-bold">Quản lý sản phẩm</h1>
+      <button id="logout" class="btn btn-outline-dark">Đăng xuất</button>
     </div>
 
     <div class="row g-4">
       <div class="col-lg-5">
         <div class="card p-4">
-          <h2 id="formTitle" class="h5">ThÃªm sáº£n pháº©m</h2>
+          <h2 id="formTitle" class="h5">Thêm sản phẩm</h2>
 
           <form id="form">
             <input id="id" type="hidden">
 
-            <label class="form-label" for="name">TÃªn sáº£n pháº©m *</label>
+            <label class="form-label" for="name">Tên sản phẩm *</label>
             <input id="name" class="form-control mb-3" required maxlength="180">
 
             <div class="row">
               <div class="col-6">
-                <label class="form-label" for="price">GiÃ¡ VNÄ *</label>
+                <label class="form-label" for="price">Giá VNĐ *</label>
                 <input id="price" class="form-control" type="number" min="0" required>
               </div>
               <div class="col-6">
@@ -90,47 +90,69 @@
               </optgroup>
             </select>
 
-            <label class="form-label" for="sizes">KÃ­ch cá»¡ vÃ  sá»‘ lÆ°á»£ng *</label>
+            <label class="form-label" for="sizes">Kích cỡ và số lượng *</label>
             <textarea id="sizes" class="form-control mb-1" rows="3"
               placeholder="36:2, 37:4, 38:5" required></textarea>
             <div class="form-text mb-3">
-              Nháº­p dáº¡ng kÃ­ch cá»¡:sá»‘ lÆ°á»£ng, phÃ¢n cÃ¡ch báº±ng dáº¥u pháº©y.
+              Nhập dạng kích cỡ:số lượng, phân cách bằng dấu phẩy.
             </div>
 
             <label class="form-label" for="file">
-              áº¢nh sáº£n pháº©m * (JPEG/PNG/WEBP, tá»‘i Ä‘a 450 KB)
+              Ảnh sản phẩm * (JPEG/PNG/WEBP, tối đa 450 KB)
             </label>
             <input id="file" class="form-control mb-2" type="file"
               accept="image/jpeg,image/png,image/webp">
 
             <div class="d-flex align-items-center gap-3 mb-3">
-              <img id="preview" class="preview" alt="Xem trÆ°á»›c áº£nh">
+              <img id="preview" class="preview" alt="Xem trước ảnh">
               <span id="imageHelp" class="small text-secondary">
-                Chá»n áº£nh tá»« mÃ¡y.
+                Chọn ảnh từ máy.
               </span>
             </div>
 
-            <label class="form-label" for="desc">MÃ´ táº£</label>
+            <label class="form-label" for="desc">Mô tả</label>
             <textarea id="desc" class="form-control mb-3" rows="2"
               maxlength="2000"></textarea>
 
-            <button class="btn btn-dark w-100" id="save">LÆ¯U Sáº¢N PHáº¨M</button>
+            <button class="btn btn-dark w-100" id="save">LƯU SẢN PHẨM</button>
             <button class="btn btn-outline-secondary w-100 mt-2"
-              type="button" id="reset">LÃ m má»›i</button>
+              type="button" id="reset">Làm mới</button>
           </form>
         </div>
       </div>
 
       <div class="col-lg-7">
         <div class="card p-3">
-          <h2 class="h5">Danh sÃ¡ch sáº£n pháº©m</h2>
+          <h2 class="h5">Danh sách sản phẩm</h2>
+          <div class="row g-2 mb-3" aria-label="Lọc sản phẩm">
+            <div class="col-12">
+              <label class="visually-hidden" for="productSearch">Tìm theo tên sản phẩm</label>
+              <input id="productSearch" class="form-control" type="search" placeholder="Tìm theo tên sản phẩm…" autocomplete="off">
+            </div>
+            <div class="col-sm-6">
+              <label class="visually-hidden" for="productCategoryFilter">Lọc theo danh mục</label>
+              <select id="productCategoryFilter" class="form-select"><option value="">Tất cả danh mục</option></select>
+            </div>
+            <div class="col-sm-6">
+              <label class="visually-hidden" for="productAudienceFilter">Lọc theo nhóm khách hàng</label>
+              <select id="productAudienceFilter" class="form-select"><option value="">Tất cả nhóm khách hàng</option></select>
+            </div>
+            <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <span id="productCountSummary" class="small text-secondary" aria-live="polite"></span>
+              <nav class="d-flex align-items-center gap-2" aria-label="Phân trang sản phẩm">
+                <button id="productsPrev" class="btn btn-outline-dark btn-sm" type="button">Trước</button>
+                <span id="productsPageLabel" class="small text-nowrap"></span>
+                <button id="productsNext" class="btn btn-outline-dark btn-sm" type="button">Tiếp</button>
+              </nav>
+            </div>
+          </div>
           <div class="table-responsive">
             <table class="table align-middle">
               <thead>
                 <tr>
-                  <th>áº¢nh</th>
-                  <th>Sáº£n pháº©m</th>
-                  <th>GiÃ¡ / tá»“n</th>
+                  <th>Ảnh</th>
+                  <th>Sản phẩm</th>
+                  <th>Giá / tồn</th>
                   <th></th>
                 </tr>
               </thead>
@@ -142,12 +164,12 @@
       <div class="col-12">
         <div class="card p-3">
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-            <h2 class="h5 mb-0">ÄÆ¡n hÃ ng COD</h2>
-            <button id="refreshOrders" type="button" class="btn btn-outline-dark btn-sm">Táº£i láº¡i Ä‘Æ¡n hÃ ng</button>
+            <h2 class="h5 mb-0">Đơn hàng COD</h2>
+            <button id="refreshOrders" type="button" class="btn btn-outline-dark btn-sm">Tải lại đơn hàng</button>
           </div>
           <div class="table-responsive"><table class="table table-sm align-middle">
-            <thead><tr><th>MÃ£ Ä‘Æ¡n</th><th>KhÃ¡ch nháº­n</th><th>Sáº£n pháº©m</th><th>Tá»•ng</th><th>Tráº¡ng thÃ¡i</th><th>Cáº­p nháº­t</th></tr></thead>
-            <tbody id="orderRows"><tr><td colspan="6" class="text-secondary">ÄÄƒng nháº­p Ä‘á»ƒ táº£i Ä‘Æ¡n hÃ ng.</td></tr></tbody>
+            <thead><tr><th>Mã đơn</th><th>Khách nhận</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
+            <tbody id="orderRows"><tr><td colspan="6" class="text-secondary">Đăng nhập để tải đơn hàng.</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -161,6 +183,9 @@ const ADMIN_TOKEN_KEY = 'dkFashionAdminToken';
 
 let token = localStorage.getItem(ADMIN_TOKEN_KEY) || '';
 let image = '';
+let allProducts = [];
+let currentProductPage = 1;
+const ADMIN_PAGE_SIZE = 20;
 
 const $ = id => document.getElementById(id);
 
@@ -193,7 +218,7 @@ async function api(path, opts = {}) {
   const d = await r.json().catch(() => ({}));
 
   if (!r.ok) {
-    throw Error(d.message || 'KhÃ´ng káº¿t ná»‘i Ä‘Æ°á»£c mÃ¡y chá»§');
+    throw Error(d.message || 'Không kết nối được máy chủ');
   }
 
   return d;
@@ -218,7 +243,7 @@ $('loginForm').onsubmit = async e => {
     $('login').classList.add('d-none');
     $('panel').classList.remove('d-none');
 
-    msg('ÄÄƒng nháº­p thÃ nh cÃ´ng', 'success');
+    msg('Đăng nhập thành công', 'success');
 
     await load();
     await loadOrders();
@@ -242,7 +267,7 @@ async function acceptAdminToken(candidate) {
   try {
     await load();
     await loadOrders();
-    msg('ÄÄƒng nháº­p thÃ nh cÃ´ng', 'success');
+    msg('Đăng nhập thành công', 'success');
   } catch (error) {
     token = '';
     localStorage.removeItem(ADMIN_TOKEN_KEY);
@@ -270,7 +295,7 @@ $('file').onchange = async () => {
     !['image/jpeg', 'image/png', 'image/webp'].includes(f.type) ||
     f.size > 450 * 1024
   ) {
-    msg('Chá»‰ JPEG/PNG/WEBP tá»‘i Ä‘a 450 KB', 'danger');
+    msg('Chỉ JPEG/PNG/WEBP tối đa 450 KB', 'danger');
     $('file').value = '';
     return;
   }
@@ -301,18 +326,18 @@ function sizes() {
       !Number.isInteger(q) ||
       q < 0
     ) {
-      throw Error('KÃ­ch cá»¡ sai. VÃ­ dá»¥: 36:2, 37:4');
+      throw Error('Kích cỡ sai. Ví dụ: 36:2, 37:4');
     }
 
     if (Object.hasOwn(o, s)) {
-      throw Error('KÃ­ch cá»¡ bá»‹ láº·p: ' + s);
+      throw Error('Kích cỡ bị lặp: ' + s);
     }
 
     o[s] = q;
   }
 
   if (!Object.keys(o).length) {
-    throw Error('Nháº­p Ã­t nháº¥t má»™t kÃ­ch cá»¡');
+    throw Error('Nhập ít nhất một kích cỡ');
   }
 
   return o;
@@ -323,7 +348,7 @@ $('form').onsubmit = async e => {
 
   try {
     if (!image) {
-      throw Error('Chá»n áº£nh sáº£n pháº©m');
+      throw Error('Chọn ảnh sản phẩm');
     }
 
     const p = {
@@ -349,7 +374,7 @@ $('form').onsubmit = async e => {
     );
 
     msg(
-      id ? 'ÄÃ£ cáº­p nháº­t sáº£n pháº©m' : 'ÄÃ£ thÃªm sáº£n pháº©m',
+      id ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm',
       'success'
     );
 
@@ -366,23 +391,76 @@ function reset() {
   image = '';
 
   $('preview').removeAttribute('src');
-  $('imageHelp').textContent = 'Chá»n áº£nh tá»« mÃ¡y.';
-  $('formTitle').textContent = 'ThÃªm sáº£n pháº©m';
-  $('save').textContent = 'LÆ¯U Sáº¢N PHáº¨M';
+  $('imageHelp').textContent = 'Chọn ảnh từ máy.';
+  $('formTitle').textContent = 'Thêm sản phẩm';
+  $('save').textContent = 'LƯU SẢN PHẨM';
 }
 
 $('reset').onclick = reset;
 
 function price(n) {
-  return Number(n).toLocaleString('vi-VN') + ' Ä‘';
+  return Number(n).toLocaleString('vi-VN') + ' đ';
 }
 
 async function load() {
   const d = await api('/api/v1/admin/products');
+  allProducts = Array.isArray(d.products) ? d.products : [];
+  currentProductPage = 1;
+  populateProductFilters();
+  renderProducts();
+}
 
-  $('rows').replaceChildren();
+function populateProductFilters() {
+  for (const [id, field, emptyLabel] of [
+    ['productCategoryFilter', 'category', 'Tất cả danh mục'],
+    ['productAudienceFilter', 'audience', 'Tất cả nhóm khách hàng']
+  ]) {
+    const select = $(id);
+    const previousValue = select.value;
+    const values = [...new Set(allProducts.map(product => product[field]).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'vi'));
+    select.replaceChildren(new Option(emptyLabel, ''));
+    values.forEach(value => select.add(new Option(value, value)));
+    if (values.includes(previousValue)) select.value = previousValue;
+  }
+}
 
-  for (const p of d.products) {
+function filteredProducts() {
+  const query = $('productSearch').value.trim().toLocaleLowerCase('vi');
+  const category = $('productCategoryFilter').value;
+  const audience = $('productAudienceFilter').value;
+  return allProducts.filter(product =>
+    (!query || String(product.name || '').toLocaleLowerCase('vi').includes(query)) &&
+    (!category || product.category === category) &&
+    (!audience || product.audience === audience)
+  );
+}
+
+function renderProducts() {
+  const rows = $('rows');
+  rows.replaceChildren();
+  const products = filteredProducts();
+  const pageCount = Math.max(1, Math.ceil(products.length / ADMIN_PAGE_SIZE));
+  currentProductPage = Math.min(currentProductPage, pageCount);
+  const start = (currentProductPage - 1) * ADMIN_PAGE_SIZE;
+  const visibleProducts = products.slice(start, start + ADMIN_PAGE_SIZE);
+  $('productCountSummary').textContent = `${products.length} sản phẩm · ${allProducts.length} tổng cộng`;
+  $('productsPageLabel').textContent = `Trang ${currentProductPage} / ${pageCount}`;
+  $('productsPrev').disabled = currentProductPage <= 1;
+  $('productsNext').disabled = currentProductPage >= pageCount;
+
+  if (!visibleProducts.length) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.className = 'text-center text-secondary py-4';
+    cell.textContent = 'Không tìm thấy sản phẩm phù hợp.';
+    row.append(cell);
+    rows.append(row);
+    return;
+  }
+
+  for (const p of visibleProducts) {
     const tr = document.createElement('tr');
     const im = document.createElement('img');
 
@@ -403,14 +481,14 @@ async function load() {
     td1.append(b, small);
 
     const td2 = document.createElement('td');
-    td2.textContent = price(p.price) + ' Â· tá»“n ' + p.stock;
+    td2.textContent = price(p.price) + ' · tồn ' + p.stock;
 
     const td3 = document.createElement('td');
     const edit = document.createElement('button');
     const del = document.createElement('button');
 
     edit.className = 'btn btn-sm btn-outline-dark mb-1';
-    edit.textContent = 'Sá»­a';
+    edit.textContent = 'Sửa';
 
     edit.onclick = () => {
       $('id').value = p.id;
@@ -426,10 +504,10 @@ async function load() {
 
       image = p.image;
       $('preview').src = image;
-      $('imageHelp').textContent = 'Äang dÃ¹ng áº£nh hiá»‡n táº¡i';
+      $('imageHelp').textContent = 'Đang dùng ảnh hiện tại';
 
-      $('formTitle').textContent = 'Sá»­a sáº£n pháº©m';
-      $('save').textContent = 'Cáº¬P NHáº¬T';
+      $('formTitle').textContent = 'Sửa sản phẩm';
+      $('save').textContent = 'CẬP NHẬT';
 
       window.scrollTo(0, 0);
     };
@@ -457,9 +535,15 @@ async function load() {
 
     td3.append(edit, document.createElement('br'), del);
     tr.append(td0, td1, td2, td3);
-    $('rows').append(tr);
+    rows.append(tr);
   }
 }
+
+$('productSearch').addEventListener('input', () => { currentProductPage = 1; renderProducts(); });
+$('productCategoryFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
+$('productAudienceFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
+$('productsPrev').onclick = () => { currentProductPage -= 1; renderProducts(); };
+$('productsNext').onclick = () => { currentProductPage += 1; renderProducts(); };
 
 async function loadOrders() {
   const body = $('orderRows');
@@ -468,23 +552,23 @@ async function loadOrders() {
     const data = await api('/api/v1/admin/orders');
     if (!data.orders?.length) {
       const tr = document.createElement('tr'); const td = document.createElement('td');
-      td.colSpan = 6; td.className = 'text-secondary'; td.textContent = 'ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng COD.'; tr.append(td); body.append(tr); return;
+      td.colSpan = 6; td.className = 'text-secondary'; td.textContent = 'Chưa có đơn hàng COD.'; tr.append(td); body.append(tr); return;
     }
     for (const order of data.orders) {
       const tr = document.createElement('tr');
       const values = [
         `DK-${order.id}`,
-        `${order.customer_name} Â· ${order.customer_phone}\n${order.customer_address}`,
-        (order.items || []).map(i => `${i.name} (${i.size}) Ã—${i.quantity}`).join(', '),
+        `${order.customer_name} · ${order.customer_phone}\n${order.customer_address}`,
+        (order.items || []).map(i => `${i.name} (${i.size}) ×${i.quantity}`).join(', '),
         price(order.total_vnd)
       ];
       values.forEach((value, index) => { const td = document.createElement('td'); td.textContent = value; if(index===1||index===2) td.style.whiteSpace='pre-line'; tr.append(td); });
       const statusCell = document.createElement('td');
       const select = document.createElement('select'); select.className = 'form-select form-select-sm';
-      [['pending','Chá» xÃ¡c nháº­n'],['confirmed','ÄÃ£ xÃ¡c nháº­n'],['shipping','Äang giao'],['completed','HoÃ n thÃ nh'],['cancelled','ÄÃ£ há»§y']].forEach(([v,label])=>{const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=order.status===v;select.append(option);});
+      [['pending','Chờ xác nhận'],['confirmed','Đã xác nhận'],['shipping','Đang giao'],['completed','Hoàn thành'],['cancelled','Đã hủy']].forEach(([v,label])=>{const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=order.status===v;select.append(option);});
       statusCell.append(select); tr.append(statusCell);
-      const actionCell=document.createElement('td'); const save=document.createElement('button'); save.className='btn btn-sm btn-dark';save.textContent='LÆ°u';
-      save.onclick=async()=>{save.disabled=true;try{await api(`/api/v1/admin/orders/${order.id}/status`,{method:'PATCH',body:JSON.stringify({status:select.value})});msg('ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng','success');await loadOrders();}catch(e){msg(e.message,'danger');}finally{save.disabled=false;}};
+      const actionCell=document.createElement('td'); const save=document.createElement('button'); save.className='btn btn-sm btn-dark';save.textContent='Lưu';
+      save.onclick=async()=>{save.disabled=true;try{await api(`/api/v1/admin/orders/${order.id}/status`,{method:'PATCH',body:JSON.stringify({status:select.value})});msg('Đã cập nhật trạng thái đơn hàng','success');await loadOrders();}catch(e){msg(e.message,'danger');}finally{save.disabled=false;}};
       actionCell.append(save);tr.append(actionCell);body.append(tr);
     }
   } catch (e) {
