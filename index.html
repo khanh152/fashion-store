@@ -636,7 +636,7 @@
         if (/(^|\s)(giay|shoe|shoes|sneaker|sneakers|boot|boots)(\s|$)/.test(title)) return 'shoes';
         if (/(^|\s)(dep|sandal|sandals|flip flop|flip flops)(\s|$)/.test(title)) return 'sandals';
         if (/(^|\s)(quan|pants|trouser|trousers|jeans)(\s|$)/.test(title)) return 'pants';
-        if (/(^|\s)(vay|dress|dresses|skirt|skirts)(\s|$)/.test(title)) return 'dresses';
+        
         if (/(^|\s)(ao|shirt|shirts|top|tops|hoodie|jacket)(\s|$)/.test(title)) return 'tops';
         if (/(^|\s)(phu kien|accessory|accessories|tui|bag|bags|cap|hat|socks)(\s|$)/.test(title)) return 'accessories';
         return 'other';
@@ -685,7 +685,7 @@
             { value: 'Nam', label: 'NAM', type: 'department' },
             { value: departmentValues.nu, label: 'N\u1eee', type: 'department' },
             { value: departmentValues['tre-em'], label: 'TR\u1eba EM', type: 'department' },
-            { value: 'Originals', label: 'Originals', type: 'category' },
+            
             { value: 'Ch\u1ea1y b\u1ed9', label: 'Ch\u1ea1y b\u1ed9', type: 'category' },
             { value: 'Lifestyle', label: 'Lifestyle', type: 'category' },
             { value: 'sale', label: 'Gi\u00e1 t\u1ed1t', type: 'category' }
