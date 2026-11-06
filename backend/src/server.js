@@ -249,7 +249,7 @@ const publicProductShape = (r) => ({
   category: r.category,
   audience: r.audience,
   description: r.description,
-  imageUrl: `/api/v1/products/${r.id}/image?v=2-${encodeURIComponent(
+  imageUrl: `/api/v1/products/${r.id}/image?v=${encodeURIComponent(
     new Date(r.updated_at).toISOString()
   )}`,
   sizes: r.sizes,
@@ -413,25 +413,6 @@ app.post('/api/v1/admin/login', async (req, res) => {
 |--------------------------------------------------------------------------
 */
 
-const SPORTS_LEGACY_CATEGORIES = Object.freeze([
-  'chạy bộ',
-  'lifestyle',
-  'giá tốt',
-  'training',
-  'originals',
-]);
-
-function addSportsCollectionFilter(filters, values) {
-  values.push(SPORTS_LEGACY_CATEGORIES);
-  const legacyCategoriesParam = `$${values.length}`;
-  filters.push(
-    `(category ILIKE 'Thể thao - %'
-      OR category ILIKE 'Sports - %'
-      OR LOWER(BTRIM(audience))=ANY(ARRAY['thể thao','sports']::text[])
-      OR LOWER(BTRIM(category))=ANY(${legacyCategoriesParam}::text[]))`
-  );
-}
-
 async function sendProductImage(id, res, includeInactive = false) {
   if (!Number.isSafeInteger(id) || id < 1) {
     return res.status(400).json({ message: 'Mã sản phẩm không hợp lệ.' });
@@ -456,7 +437,12 @@ async function sendProductImage(id, res, includeInactive = false) {
 
     const contentType = `image/${match[1].toLowerCase()}`;
     res
-      .set('Cache-Control', 'private, no-store')
+      .set(
+        'Cache-Control',
+        includeInactive
+          ? 'private, max-age=300'
+          : 'public, max-age=31536000, immutable'
+      )
       .type(contentType)
       .send(Buffer.from(match[2], 'base64'));
   } catch (e) {
@@ -530,22 +516,24 @@ app.get('/api/v1/products', async (req, res) => {
     );
   }
 
-  if (department !== 'sports' && audience === 'nam') {
+  if (audience === 'nam') {
     filters.push(
       "(audience ILIKE '%nam%' OR audience ILIKE '%unisex%')"
     );
-  } else if (department !== 'sports' && audience === 'nu') {
+  } else if (audience === 'nu') {
     filters.push(
       "(audience ILIKE '%nữ%' OR audience ILIKE '%nu%' OR audience ILIKE '%unisex%')"
     );
-  } else if (department !== 'sports' && audience === 'tre-em') {
+  } else if (audience === 'tre-em') {
     filters.push(
       "(audience ILIKE '%trẻ em%' OR audience ILIKE '%tre em%' OR audience ILIKE '%children%' OR audience ILIKE '%kids%')"
     );
   }
 
   if (department === 'sports') {
-    addSportsCollectionFilter(filters, values);
+    filters.push(
+      `(category ILIKE 'Thể thao - %' OR LOWER(category)=ANY(ARRAY['chạy bộ','lifestyle','giá tốt','training','originals']::text[]))`
+    );
   }
 
   const productTypes = {
@@ -685,14 +673,7 @@ app.get('/api/v1/admin/products', auth, async (_q, res) => {
     );
   }
   if (category) addFilter('category=?', category);
-  if (audience) {
-    const normalizedAudience = audience.trim().toLocaleLowerCase('vi');
-    if (normalizedAudience === 'thể thao' || normalizedAudience === 'sports') {
-      addSportsCollectionFilter(filters, values);
-    } else {
-      addFilter('audience=?', audience);
-    }
-  }
+  if (audience) addFilter('audience=?', audience);
   const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
   try {

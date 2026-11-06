@@ -56,10 +56,8 @@
 
             <label class="form-label" for="productMainCategory">Danh mục chính *</label>
             <select id="productMainCategory" class="form-select mb-3" required>
-              <option value="Nam">NAM</option>
-              <option value="N&#7919;">N&#7918;</option>
-              <option value="Tr&#7867; em">TR&#7866; EM</option>
-              <option value="sports">TH&#7874; THAO</option>
+              <option value="regular">Danh mục thường</option>
+              <option value="sports">Thể thao</option>
             </select>
 
             <div class="row">
@@ -71,7 +69,6 @@
                 <label class="form-label" for="category">Danh m&#7909;c con *</label>
                 <select id="category" class="form-select" required>
                   <option value="" disabled selected>Ch&#7885;n danh m&#7909;c</option>
-                  <option value="all" disabled>T&#7845;t c&#7843; (ch&#7881; d&#249;ng khi l&#7885;c)</option>
                   <option value="Gi&#224;y">Gi&#224;y</option>
                   <option value="D&#233;p">D&#233;p</option>
                   <option value="Qu&#7847;n">Qu&#7847;n</option>
@@ -81,6 +78,17 @@
               </div>
             </div>
             <div id="legacyCategoryNotice" class="form-text text-warning mb-3" role="status" hidden></div>
+
+            <label class="form-label mt-3" for="audience">Nh&#243;m kh&#225;ch h&#224;ng *</label>
+            <select id="audience" class="form-select mb-3" required>
+              <option value="" disabled selected>Ch&#7885;n nh&#243;m kh&#225;ch h&#224;ng</option>
+              <option value="Nam">Nam</option>
+              <option value="N&#7919;">N&#7919;</option>
+              <option value="Tr&#7867; em">Tr&#7867; em</option>
+              <optgroup label="T&#432;&#417;ng th&#237;ch d&#7919; li&#7879;u c&#361;">
+                <option value="Nam N&#7919;">Nam N&#7919; (Unisex c&#361;)</option>
+              </optgroup>
+            </select>
 
             <label class="form-label" for="sizes">Kích cỡ và số lượng *</label>
             <textarea id="sizes" class="form-control mb-1" rows="3"
@@ -401,22 +409,6 @@ function inferProductSubcategory(name) {
   return '';
 }
 
-function productClassification(mainCategory, subcategory) {
-  const allowedMainCategories = ['Nam', 'Nữ', 'Trẻ em', 'sports'];
-  const allowedSubcategories = ['Giày', 'Dép', 'Quần', 'Áo', 'Phụ kiện'];
-  if (
-    !allowedMainCategories.includes(mainCategory) ||
-    !allowedSubcategories.includes(subcategory)
-  ) {
-    throw Error('Chọn danh mục chính và danh mục con hợp lệ.');
-  }
-
-  return {
-    category: mainCategory === 'sports' ? 'Thể thao - ' + subcategory : subcategory,
-    audience: mainCategory === 'sports' ? 'Thể thao' : mainCategory
-  };
-}
-
 $('form').onsubmit = async e => {
   e.preventDefault();
 
@@ -425,14 +417,13 @@ $('form').onsubmit = async e => {
       throw Error('Chọn ảnh sản phẩm');
     }
 
-    const classification = productClassification(
-      $('productMainCategory').value,
-      $('category').value
-    );
     const p = {
       name: $('name').value.trim(),
       price: Number($('price').value),
-      ...classification,
+      category: $('productMainCategory').value === 'sports'
+        ? 'Thể thao - ' + $('category').value
+        : $('category').value,
+      audience: $('audience').value,
       description: $('desc').value.trim(),
       image,
       sizes: sizes()
@@ -515,21 +506,9 @@ function populateProductFilters() {
   ]) {
     const select = $(id);
     const previousValue = select.value;
-    let values = id === 'productCategoryFilter'
+    const values = id === 'productCategoryFilter'
       ? productFilters.categories
       : productFilters.audiences;
-    if (id === 'productAudienceFilter') {
-      const standardAudiences = ['Nam', 'Nữ', 'Trẻ em', 'Thể thao'];
-      const standardValues = new Set(
-        standardAudiences.map(value => value.toLocaleLowerCase('vi'))
-      );
-      values = [
-        ...standardAudiences,
-        ...values.filter(value =>
-          !standardValues.has(String(value).trim().toLocaleLowerCase('vi'))
-        )
-      ];
-    }
     select.replaceChildren(new Option(emptyLabel, ''));
     values.forEach(value => select.add(new Option(value, value)));
     if (values.includes(previousValue)) select.value = previousValue;
@@ -607,19 +586,14 @@ function renderProducts() {
       $('price').value = p.price;
       const savedCategory = String(p.category || '');
       const sportCategory = /^thể thao\s*-\s*/i.test(savedCategory);
-      const sportsAudience = /^(thể thao|sports)$/i.test(String(p.audience || '').trim());
       const legacyCategory = /^(chạy bộ|lifestyle|giá tốt|training|originals)$/i.test(savedCategory);
-      const isSportsProduct = sportCategory || sportsAudience || legacyCategory;
       const savedSubcategory = sportCategory
         ? savedCategory.replace(/^thể thao\s*-\s*/i, '').trim()
-        : legacyCategory ? inferProductSubcategory(p.name) : savedCategory;
+        : savedCategory;
       const mappedSubcategory = legacyCategory
         ? inferProductSubcategory(p.name)
         : savedSubcategory;
-      const mainCategory = isSportsProduct ? 'sports' : String(p.audience || '');
-      const hasMainCategory = [...$('productMainCategory').options]
-        .some(option => option.value === mainCategory);
-      $('productMainCategory').value = hasMainCategory ? mainCategory : '';
+      $('productMainCategory').value = sportCategory || legacyCategory ? 'sports' : 'regular';
       const hasSubcategory = [...$('category').options]
         .some(option => option.value === mappedSubcategory);
       $('category').value = hasSubcategory ? mappedSubcategory : '';
@@ -627,13 +601,14 @@ function renderProducts() {
       if (legacyCategory) {
         notice.hidden = false;
         notice.textContent = `Sản phẩm đang thuộc danh mục cũ “${savedCategory}”. Hệ thống gợi ý “Thể thao - ${mappedSubcategory || 'chưa xác định'}” từ tên sản phẩm; hãy kiểm tra danh mục con trước khi lưu. Dữ liệu chỉ đổi khi bạn chủ động lưu.`;
-      } else if (!hasMainCategory || !hasSubcategory) {
+      } else if (!hasSubcategory) {
         notice.hidden = false;
-        notice.textContent = `Danh mục hiện tại “${savedCategory}” hoặc nhóm chính “${p.audience || ''}” không thuộc các lựa chọn hiện tại. Chọn danh mục chính và danh mục con phù hợp trước khi lưu; dữ liệu chưa bị thay đổi.`;
+        notice.textContent = `Danh mục hiện tại “${savedCategory}” không thuộc 5 danh mục con mới. Chọn danh mục phù hợp trước khi lưu; dữ liệu chưa bị thay đổi.`;
       } else {
         notice.hidden = true;
         notice.textContent = '';
       }
+      $('audience').value = p.audience;
       $('desc').value = p.description || '';
 
       $('sizes').value = Object.entries(p.sizes || {})
