@@ -277,6 +277,8 @@
         .product-item[hidden] { display:none !important; }
         .img-wrapper { cursor:pointer; }
         .img-wrapper img { object-fit:cover; }
+        .img-wrapper.image-unavailable::after { content:attr(data-image-status); color:#666; font-size:12px; }
+        .img-wrapper.image-unavailable img { display:none; }
         .product-title:hover { text-decoration:underline; }
         .product-price { font-size:14px; font-weight:800; }
         .old-price { font-size:12px; color:#777; text-decoration:line-through; margin-left:6px; }
@@ -635,6 +637,19 @@
         }
         return '';
       }
+      function markProductImageUnavailable(image) {
+        image.onerror = null;
+        image.removeAttribute('src');
+        image.alt = '';
+        const wrapper = image.closest('.img-wrapper');
+        if (wrapper) {
+          wrapper.classList.add('image-unavailable');
+          wrapper.dataset.imageStatus = 'Ảnh sản phẩm không tải được';
+          wrapper.setAttribute('aria-label', 'Ảnh sản phẩm không tải được');
+        } else {
+          image.alt = 'Ảnh sản phẩm không tải được';
+        }
+      }
       async function loadLiveProducts(cache = 'default') {
         const requestId = ++productRequestId;
         productsLoading = true;
@@ -825,7 +840,7 @@
             '<div class="img-wrapper" role="button" tabindex="0" aria-label="Xem ' + escapeHtml(p.title) + '" onclick="openProduct(\'' + p.id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProduct(\'' + p.id + '\');}">' +
               '<span class="product-badge">' + escapeHtml(p.badge) + '</span>' +
               '<button class="wishlist-btn" type="button" aria-label="' + (wishlist.has(p.id) ? 'B\u1ecf y\u00eau th\u00edch' : 'Th\u00eam y\u00eau th\u00edch') + '" onclick="event.stopPropagation();toggleWishlist(\'' + p.id + '\')"><i class="' + (wishlist.has(p.id) ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart') + '"></i></button>' +
-              '<img loading="lazy" decoding="async" src="' + escapeHtml(p.imageUrl) + '" alt="' + escapeHtml(p.title) + '" onerror="this.onerror=null;this.src=\'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80\';">' +
+              '<img loading="lazy" decoding="async" src="' + escapeHtml(p.imageUrl) + '" alt="' + escapeHtml(p.title) + '" onerror="markProductImageUnavailable(this)">' +
             '</div><div class="card-info"><div class="product-category">' + escapeHtml(p.category) + ' \u00b7 ' + escapeHtml(p.audience) + '</div>' +
             '<a href="#product-detail" class="product-title" onclick="event.preventDefault();openProduct(\'' + p.id + '\')">' + escapeHtml(p.title) + '</a>' +
             '<div class="mt-2"><span class="product-price">' + formatPrice(p.price) + '</span>' + (p.oldPrice ? '<span class="old-price">' + formatPrice(p.oldPrice) + '</span>' : '') + '</div>' +

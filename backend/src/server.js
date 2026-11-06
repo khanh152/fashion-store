@@ -249,7 +249,7 @@ const publicProductShape = (r) => ({
   category: r.category,
   audience: r.audience,
   description: r.description,
-  imageUrl: `/api/v1/products/${r.id}/image?v=${encodeURIComponent(
+  imageUrl: `/api/v1/products/${r.id}/image?v=2-${encodeURIComponent(
     new Date(r.updated_at).toISOString()
   )}`,
   sizes: r.sizes,
@@ -437,12 +437,7 @@ async function sendProductImage(id, res, includeInactive = false) {
 
     const contentType = `image/${match[1].toLowerCase()}`;
     res
-      .set(
-        'Cache-Control',
-        includeInactive
-          ? 'private, max-age=300'
-          : 'public, max-age=31536000, immutable'
-      )
+      .set('Cache-Control', 'private, no-store')
       .type(contentType)
       .send(Buffer.from(match[2], 'base64'));
   } catch (e) {
@@ -516,15 +511,15 @@ app.get('/api/v1/products', async (req, res) => {
     );
   }
 
-  if (audience === 'nam') {
+  if (department !== 'sports' && audience === 'nam') {
     filters.push(
       "(audience ILIKE '%nam%' OR audience ILIKE '%unisex%')"
     );
-  } else if (audience === 'nu') {
+  } else if (department !== 'sports' && audience === 'nu') {
     filters.push(
       "(audience ILIKE '%nữ%' OR audience ILIKE '%nu%' OR audience ILIKE '%unisex%')"
     );
-  } else if (audience === 'tre-em') {
+  } else if (department !== 'sports' && audience === 'tre-em') {
     filters.push(
       "(audience ILIKE '%trẻ em%' OR audience ILIKE '%tre em%' OR audience ILIKE '%children%' OR audience ILIKE '%kids%')"
     );
@@ -532,7 +527,11 @@ app.get('/api/v1/products', async (req, res) => {
 
   if (department === 'sports') {
     filters.push(
-      `(category ILIKE 'Thể thao - %' OR LOWER(category)=ANY(ARRAY['chạy bộ','lifestyle','giá tốt','training','originals']::text[]))`
+      `(category ILIKE 'Thể thao - %'
+        OR category ILIKE 'Sports - %'
+        OR audience ILIKE 'Thể thao'
+        OR audience ILIKE 'Sports'
+        OR LOWER(category)=ANY(ARRAY['chạy bộ','lifestyle','giá tốt','training','originals']::text[]))`
     );
   }
 

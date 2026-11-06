@@ -6,13 +6,13 @@ This is a code update based on the ZIP supplied in the conversation. It keeps th
 
 - Storefront requests use the configured Render API base (`https://fashion-store-in8c.onrender.com`) rather than same-origin `/api/...` paths on GitHub Pages.
 - The storefront requests 12 products at a time from `GET /api/v1/products`; search, category/audience filters and sorting are applied by the API.
-- The THỂ THAO collection has exactly six filters: TẤT CẢ, GIÀY, DÉP, QUẦN, ÁO, and PHỤ KIỆN. New sports products use the existing `category` column with a `Thể thao - <subcategory>` value; audience remains a separate target-customer field.
+- The THỂ THAO collection has exactly six filters: TẤT CẢ, GIÀY, DÉP, QUẦN, ÁO, and PHỤ KIỆN. Admin's primary category is NAM, NỮ, TRẺ EM, or THỂ THAO; sports products use the existing `category` column with a `Thể thao - <subcategory>` value and `audience=Thể thao`. No schema change is required.
 - Old sports collection labels are recognized by the read-only product filter for compatibility. No existing product is reclassified automatically. Admin suggests a subcategory from the product name for legacy rows, and only saves the new category after an administrator reviews and explicitly saves that product.
 - The old LIFESTYLE and CHẠY BỘ labels are not navigation/filter buttons. GIÁ TỐT is not a storefront filter. Legacy database rows with those labels remain unchanged unless an administrator explicitly edits and saves them.
 - For Live Server development, the API CORS policy accepts HTTP origins on `localhost`, `127.0.0.1`, and `[::1]` (including Live Server's selected port); other origins must be listed in `FRONTEND_ORIGIN`.
 - The storefront accepts both the paginated response and the previous `{ products: [...] }` response during a rolling backend/frontend update.
 - Public product-list responses contain product metadata only. Product photos remain in the existing `image_data_url` column and are served separately from `/api/v1/products/:id/image`, then lazy-loaded by the storefront.
-- The storefront caches short-lived product-list responses and uses versioned, immutable image URLs so updated images receive a new URL without migrating or deleting stored Base64 data.
+- The storefront caches short-lived product-list responses and requests versioned product-image URLs with `no-store` image responses, preventing an old cached image from being reused. Failed product images are not replaced with sample photos. Images remain in the existing `image_data_url` column.
 - Admin product lists are also paginated and omit image data; thumbnails are fetched lazily through the authenticated admin image endpoint, and the original image is fetched only when editing a product.
 - These performance changes do not require a database migration. Existing product rows, IDs, and Base64 images are left untouched.
 - Product detail sizes are built from the inventory values returned by Admin.
@@ -61,7 +61,7 @@ The admin page is served by Render at `https://fashion-store-in8c.onrender.com/a
 ## API endpoints in this version
 
 - `GET /health`
-- `GET /api/v1/products?page=1&limit=12` (supports `q`, `category`, `audience`, and `sort` filters; maximum page size is 100)
+- `GET /api/v1/products?page=1&limit=12` (supports `q`, `category`, `audience`, `department=sports`, and `sort` filters; maximum page size is 100)
 - `GET /api/v1/products/:id/image` (serves the existing product image without embedding it in the product-list JSON)
 - `GET /api/v1/admin/products?page=1&limit=20` (requires admin token; supports `q`, `category`, and `audience`; maximum page size is 100)
 - `GET /api/v1/admin/products/:id/image` (requires admin token)
