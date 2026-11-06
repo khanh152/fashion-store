@@ -27,6 +27,11 @@ const pool = new Pool({
     process.env.NODE_ENV === 'production'
       ? { rejectUnauthorized: false }
       : false,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+  statement_timeout: 15000,
+  query_timeout: 20000,
 });
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -57,6 +62,18 @@ const origins = [
   'https://fashionstore.id.vn',
   'https://www.fashionstore.id.vn',
 ];
+
+function isLocalDevelopmentOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return (
+      url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
 
 app.disable('x-powered-by');
 
@@ -102,7 +119,11 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || origins.includes(origin)) {
+      if (
+        !origin ||
+        origins.includes(origin) ||
+        isLocalDevelopmentOrigin(origin)
+      ) {
         return callback(null, true);
       }
 
@@ -167,7 +188,7 @@ const schema = z.object({
     .min(0)
     .max(1000000000),
 
-  category: z.string().trim().min(1).max(80).default('Lifestyle'),
+  category: z.string().trim().min(1).max(80),
 
   audience: z.string().trim().min(1).max(40).default('Nam Nữ'),
 
@@ -216,6 +237,27 @@ const shape = (r) => ({
     0
   ),
 
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+const publicProductShape = (r) => ({
+  id: String(r.id),
+  title: r.name,
+  name: r.name,
+  price: r.price_vnd,
+  category: r.category,
+  audience: r.audience,
+  description: r.description,
+  imageUrl: `/api/v1/products/${r.id}/image?v=${encodeURIComponent(
+    new Date(r.updated_at).toISOString()
+  )}`,
+  sizes: r.sizes,
+  active: r.active,
+  stock: Object.values(r.sizes || {}).reduce(
+    (total, quantity) => total + Number(quantity || 0),
+    0
+  ),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -371,14 +413,219 @@ app.post('/api/v1/admin/login', async (req, res) => {
 |--------------------------------------------------------------------------
 */
 
-app.get('/api/v1/products', async (_q, res) => {
+async function sendProductImage(id, res, includeInactive = false) {
+  if (!Number.isSafeInteger(id) || id < 1) {
+    return res.status(400).json({ message: 'Mã sản phẩm không hợp lệ.' });
+  }
+
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM products WHERE active=TRUE ORDER BY updated_at DESC,id DESC'
+      `SELECT image_data_url FROM products WHERE id=$1${includeInactive ? '' : ' AND active=TRUE'}`,
+      [id]
     );
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Không tìm thấy ảnh sản phẩm.' });
+    }
 
-    res.set('Cache-Control', 'no-store').json({
-      products: rows.map(shape),
+    const match =
+      /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(
+        rows[0].image_data_url
+      );
+    if (!match) {
+      return res.status(500).json({ message: 'Ảnh sản phẩm không hợp lệ.' });
+    }
+
+    const contentType = `image/${match[1].toLowerCase()}`;
+    res
+      .set(
+        'Cache-Control',
+        includeInactive
+          ? 'private, max-age=300'
+          : 'public, max-age=31536000, immutable'
+      )
+      .type(contentType)
+      .send(Buffer.from(match[2], 'base64'));
+  } catch (e) {
+    return fail(res, e);
+  }
+}
+
+app.get('/api/v1/products/:id/image', (req, res) =>
+  sendProductImage(Number(req.params.id), res)
+);
+
+app.get('/api/v1/admin/products/:id/image', auth, (req, res) =>
+  sendProductImage(Number(req.params.id), res, true)
+);
+
+app.get('/api/v1/products', async (req, res) => {
+  const page = Number(req.query.page || 1);
+  const pageSize = Number(req.query.limit || 12);
+  const search = String(req.query.q || '').trim();
+  const audience = String(req.query.audience || 'all');
+  const category = String(req.query.category || 'all');
+  const department = String(req.query.department || 'all');
+  const normalizedCategory = category
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .trim()
+    .toLowerCase();
+  const categoryAliases = {
+    all: 'all',
+    'tat ca': 'all',
+    giay: 'shoes',
+    dep: 'sandals',
+    quan: 'pants',
+    ao: 'tops',
+    vay: 'dresses',
+    'phu kien': 'accessories',
+  };
+  const categoryKey = Object.hasOwn(categoryAliases, normalizedCategory)
+    ? categoryAliases[normalizedCategory]
+    : normalizedCategory;
+  const sort = String(req.query.sort || 'default');
+
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    !Number.isSafeInteger(pageSize) ||
+    pageSize < 1 ||
+    pageSize > 100 ||
+    search.length > 100 ||
+    !['all', 'nam', 'nu', 'tre-em'].includes(audience) ||
+    !['all', 'sports'].includes(department) ||
+    !['default', 'price-asc', 'price-desc'].includes(sort)
+  ) {
+    return res.status(400).json({
+      message: 'Tham số phân trang hoặc bộ lọc không hợp lệ.',
+    });
+  }
+
+  const filters = ['active=TRUE'];
+  const values = [];
+  const addFilter = (sql, value) => {
+    values.push(value);
+    filters.push(sql.replace('?', `$${values.length}`));
+  };
+
+  if (search) {
+    addFilter(
+      `POSITION(LOWER(?) IN LOWER(CONCAT_WS(' ',name,category,audience))) > 0`,
+      search
+    );
+  }
+
+  if (audience === 'nam') {
+    filters.push(
+      "(audience ILIKE '%nam%' OR audience ILIKE '%unisex%')"
+    );
+  } else if (audience === 'nu') {
+    filters.push(
+      "(audience ILIKE '%nữ%' OR audience ILIKE '%nu%' OR audience ILIKE '%unisex%')"
+    );
+  } else if (audience === 'tre-em') {
+    filters.push(
+      "(audience ILIKE '%trẻ em%' OR audience ILIKE '%tre em%' OR audience ILIKE '%children%' OR audience ILIKE '%kids%')"
+    );
+  }
+
+  if (department === 'sports') {
+    filters.push(
+      `(category ILIKE 'Thể thao - %' OR LOWER(category)=ANY(ARRAY['chạy bộ','lifestyle','giá tốt','training','originals']::text[]))`
+    );
+  }
+
+  const productTypes = {
+    shoes: {
+      categories: ['giày', 'giay', 'shoe', 'shoes'],
+      categoryPatterns: ['%giày%', '%giay%', '%shoe%'],
+      names: ['%giày%', '%giay%', '%shoe%', '%sneaker%', '%boot%'],
+    },
+    sandals: {
+      categories: ['dép', 'dep', 'sandal', 'sandals'],
+      categoryPatterns: ['%dép%', '%dep%', '%sandal%'],
+      names: ['%dép%', '%dep%', '%sandal%', '%flip flop%'],
+    },
+    pants: {
+      categories: ['quần', 'quan', 'pants', 'trouser', 'trousers', 'jeans'],
+      categoryPatterns: ['%quần%', '%quan%', '%pant%', '%jean%'],
+      names: ['%quần%', '%quan%', '%pants%', '%trouser%', '%jeans%'],
+    },
+    tops: {
+      categories: ['áo', 'ao', 'shirt', 'shirts', 'top', 'tops'],
+      categoryPatterns: ['%áo%', '%ao%', '%shirt%', '%top%'],
+      names: ['%áo%', '%ao%', '%shirt%', '%top%', '%hoodie%', '%jacket%'],
+    },
+    dresses: {
+      categories: ['váy', 'vay', 'dress', 'dresses', 'skirt', 'skirts'],
+      categoryPatterns: ['%váy%', '%vay%', '%dress%', '%skirt%'],
+      names: ['%váy%', '%vay%', '%dress%', '%skirt%'],
+    },
+    accessories: {
+      categories: ['phụ kiện', 'phu kien', 'accessory', 'accessories'],
+      categoryPatterns: ['%phụ kiện%', '%phu kien%', '%accessor%'],
+      names: ['%phụ kiện%', '%phu kien%', '%accessory%', '%túi%', '%tui%', '%bag%', '%cap%', '%hat%', '%socks%'],
+    },
+  };
+
+  if (productTypes[categoryKey]) {
+    const type = productTypes[categoryKey];
+    values.push(type.categories);
+    const categoryParam = `$${values.length}`;
+    values.push(type.categoryPatterns);
+    const categoryPatternParam = `$${values.length}`;
+    values.push(type.names);
+    const nameParam = `$${values.length}`;
+    filters.push(
+      `(LOWER(category)=ANY(${categoryParam}::text[]) OR category ILIKE ANY(${categoryPatternParam}::text[]) OR name ILIKE ANY(${nameParam}::text[]))`
+    );
+  } else if (categoryKey !== 'all') {
+    addFilter('LOWER(category)=LOWER(?)', category);
+  }
+
+  const where = filters.join(' AND ');
+  const orderBy =
+    sort === 'price-asc'
+      ? 'price_vnd ASC,id DESC'
+      : sort === 'price-desc'
+        ? 'price_vnd DESC,id DESC'
+        : 'updated_at DESC,id DESC';
+
+  try {
+    const limitParam = values.length + 1;
+    const offsetParam = values.length + 2;
+    const offset = (page - 1) * pageSize;
+    if (!Number.isSafeInteger(offset)) {
+      return res.status(400).json({ message: 'Số trang vượt quá giới hạn.' });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id,name,price_vnd,category,audience,description,sizes,active,
+              created_at,updated_at,COUNT(*) OVER() AS total_count
+       FROM products
+       WHERE ${where}
+       ORDER BY ${orderBy}
+       LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      [...values, pageSize, offset]
+    );
+    let total = Number(rows[0]?.total_count || 0);
+    if (!rows.length) {
+      const count = await pool.query(
+        `SELECT COUNT(*) AS total FROM products WHERE ${where}`,
+        values
+      );
+      total = Number(count.rows[0].total);
+    }
+
+    res.set('Cache-Control', 'private, max-age=15, stale-while-revalidate=30').json({
+      products: rows.map(publicProductShape),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
     });
   } catch (e) {
     fail(res, e);
@@ -392,13 +639,87 @@ app.get('/api/v1/products', async (_q, res) => {
 */
 
 app.get('/api/v1/admin/products', auth, async (_q, res) => {
-  try {
-    const { rows } = await pool.query(
-      'SELECT * FROM products ORDER BY updated_at DESC,id DESC'
-    );
+  const page = Number(_q.query.page || 1);
+  const pageSize = Number(_q.query.limit || 20);
+  const search = String(_q.query.q || '').trim();
+  const category = String(_q.query.category || '').trim();
+  const audience = String(_q.query.audience || '').trim();
 
-    res.json({
-      products: rows.map(shape),
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    !Number.isSafeInteger(pageSize) ||
+    pageSize < 1 ||
+    pageSize > 100 ||
+    search.length > 100 ||
+    category.length > 80 ||
+    audience.length > 40
+  ) {
+    return res.status(400).json({
+      message: 'Tham số phân trang hoặc bộ lọc không hợp lệ.',
+    });
+  }
+
+  const filters = [];
+  const values = [];
+  const addFilter = (sql, value) => {
+    values.push(value);
+    filters.push(sql.replace('?', `$${values.length}`));
+  };
+  if (search) {
+    addFilter(
+      `POSITION(LOWER(?) IN LOWER(name)) > 0`,
+      search
+    );
+  }
+  if (category) addFilter('category=?', category);
+  if (audience) addFilter('audience=?', audience);
+  const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+  try {
+    const limitParam = values.length + 1;
+    const offsetParam = values.length + 2;
+    const offset = (page - 1) * pageSize;
+    if (!Number.isSafeInteger(offset)) {
+      return res.status(400).json({ message: 'Số trang vượt quá giới hạn.' });
+    }
+
+    const [result, categories, audiences, catalogCount] = await Promise.all([
+      pool.query(
+        `SELECT id,name,price_vnd,category,audience,description,sizes,active,
+                created_at,updated_at,COUNT(*) OVER() AS total_count
+         FROM products ${where}
+         ORDER BY updated_at DESC,id DESC
+         LIMIT $${limitParam} OFFSET $${offsetParam}`,
+        [...values, pageSize, offset]
+      ),
+      pool.query('SELECT DISTINCT category FROM products ORDER BY category'),
+      pool.query('SELECT DISTINCT audience FROM products ORDER BY audience'),
+      pool.query('SELECT COUNT(*) AS total FROM products'),
+    ]);
+
+    let total = Number(result.rows[0]?.total_count || 0);
+    if (!result.rows.length) {
+      const count = await pool.query(
+        `SELECT COUNT(*) AS total FROM products ${where}`,
+        values
+      );
+      total = Number(count.rows[0].total);
+    }
+
+    res.set('Cache-Control', 'private, no-store').json({
+      products: result.rows.map(publicProductShape).map(({ imageUrl, ...product }) => product),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalProducts: Number(catalogCount.rows[0].total),
+        totalPages: Math.ceil(total / pageSize),
+      },
+      filters: {
+        categories: categories.rows.map((row) => row.category).filter(Boolean),
+        audiences: audiences.rows.map((row) => row.audience).filter(Boolean),
+      },
     });
   } catch (e) {
     fail(res, e);

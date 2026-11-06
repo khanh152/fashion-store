@@ -54,30 +54,30 @@
             <label class="form-label" for="name">Tên sản phẩm *</label>
             <input id="name" class="form-control mb-3" required maxlength="180">
 
+            <label class="form-label" for="productMainCategory">Danh mục chính *</label>
+            <select id="productMainCategory" class="form-select mb-3" required>
+              <option value="regular">Danh mục thường</option>
+              <option value="sports">Thể thao</option>
+            </select>
+
             <div class="row">
               <div class="col-6">
                 <label class="form-label" for="price">Giá VNĐ *</label>
                 <input id="price" class="form-control" type="number" min="0" required>
               </div>
               <div class="col-6">
-                <label class="form-label" for="category">Danh m&#7909;c s&#7843;n ph&#7849;m *</label>
+                <label class="form-label" for="category">Danh m&#7909;c con *</label>
                 <select id="category" class="form-select" required>
                   <option value="" disabled selected>Ch&#7885;n danh m&#7909;c</option>
                   <option value="Gi&#224;y">Gi&#224;y</option>
                   <option value="D&#233;p">D&#233;p</option>
                   <option value="Qu&#7847;n">Qu&#7847;n</option>
                   <option value="&#193;o">&#193;o</option>
-                  <option value="V&#225;y">V&#225;y</option>
                   <option value="Ph&#7909; ki&#7879;n">Ph&#7909; ki&#7879;n</option>
-                  <optgroup label="Danh m&#7909;c c&#361; (gi&#7919; d&#7919; li&#7879;u hi&#7879;n t&#7841;i)">
-                    <option value="Originals">Originals</option>
-                    <option value="Lifestyle">Lifestyle</option>
-                    <option value="Ch&#7841;y b&#7897;">Ch&#7841;y b&#7897;</option>
-                    <option value="Training">Training</option>
-                  </optgroup>
                 </select>
               </div>
             </div>
+            <div id="legacyCategoryNotice" class="form-text text-warning mb-3" role="status" hidden></div>
 
             <label class="form-label mt-3" for="audience">Nh&#243;m kh&#225;ch h&#224;ng *</label>
             <select id="audience" class="form-select mb-3" required>
@@ -185,7 +185,22 @@ let token = localStorage.getItem(ADMIN_TOKEN_KEY) || '';
 let image = '';
 let allProducts = [];
 let currentProductPage = 1;
+let productTotal = 0;
+let productCatalogTotal = 0;
+let productPageCount = 0;
+let productFilters = { categories: [], audiences: [] };
+let productSearchTimer;
+const productImageUrls = new Set();
 const ADMIN_PAGE_SIZE = 20;
+const productImageObserver = 'IntersectionObserver' in window
+  ? new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      productImageObserver.unobserve(entry.target);
+      void loadProductThumbnail(entry.target, entry.target.dataset.productId);
+    }
+  })
+  : null;
 
 const $ = id => document.getElementById(id);
 
@@ -222,6 +237,44 @@ async function api(path, opts = {}) {
   }
 
   return d;
+}
+
+async function fetchProductImage(id) {
+  const response = await fetch(
+    API_URL + '/api/v1/admin/products/' + encodeURIComponent(id) + '/image',
+    {
+      cache: 'no-store',
+      headers: { Authorization: 'Bearer ' + token }
+    }
+  );
+  if (!response.ok) {
+    throw Error('Không tải được ảnh sản phẩm.');
+  }
+  return response.blob();
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || Error('Không đọc được ảnh sản phẩm.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function loadProductThumbnail(img, id) {
+  try {
+    const blob = await fetchProductImage(id);
+    const url = URL.createObjectURL(blob);
+    if (img.isConnected) {
+      productImageUrls.add(url);
+      img.src = url;
+    } else {
+      URL.revokeObjectURL(url);
+    }
+  } catch {
+    if (img.isConnected) img.alt = 'Không tải được ảnh sản phẩm';
+  }
 }
 
 $('loginForm').onsubmit = async e => {
@@ -343,6 +396,19 @@ function sizes() {
   return o;
 }
 
+function inferProductSubcategory(name) {
+  const text = String(name || '').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .toLocaleLowerCase('vi');
+  if (/\b(giay|shoe|sneaker|boot)\b/.test(text)) return 'Giày';
+  if (/\b(dep|sandal|flip flop)\b/.test(text)) return 'Dép';
+  if (/\b(quan|pants|trouser|jeans)\b/.test(text)) return 'Quần';
+  if (/\b(ao|shirt|top|hoodie|jacket)\b/.test(text)) return 'Áo';
+  if (/\b(phu kien|tui|bag|cap|hat|socks|accessor)\b/.test(text)) return 'Phụ kiện';
+  return '';
+}
+
 $('form').onsubmit = async e => {
   e.preventDefault();
 
@@ -354,7 +420,9 @@ $('form').onsubmit = async e => {
     const p = {
       name: $('name').value.trim(),
       price: Number($('price').value),
-      category: $('category').value,
+      category: $('productMainCategory').value === 'sports'
+        ? 'Thể thao - ' + $('category').value
+        : $('category').value,
       audience: $('audience').value,
       description: $('desc').value.trim(),
       image,
@@ -397,6 +465,8 @@ function reset() {
 
   $('preview').removeAttribute('src');
   $('imageHelp').textContent = 'Chọn ảnh từ máy.';
+  $('legacyCategoryNotice').hidden = true;
+  $('legacyCategoryNotice').textContent = '';
   $('formTitle').textContent = 'Thêm sản phẩm';
   $('save').textContent = 'LƯU SẢN PHẨM';
 }
@@ -408,9 +478,23 @@ function price(n) {
 }
 
 async function load() {
-  const d = await api('/api/v1/admin/products');
+  const params = new URLSearchParams({
+    page: String(currentProductPage),
+    limit: String(ADMIN_PAGE_SIZE),
+    q: $('productSearch').value.trim(),
+    category: $('productCategoryFilter').value,
+    audience: $('productAudienceFilter').value
+  });
+  const d = await api('/api/v1/admin/products?' + params);
   allProducts = Array.isArray(d.products) ? d.products : [];
-  currentProductPage = 1;
+  productTotal = Number(d.pagination?.total || 0);
+  productCatalogTotal = Number(d.pagination?.totalProducts || productTotal);
+  productPageCount = Number(d.pagination?.totalPages || 0);
+  productFilters = d.filters || productFilters;
+  if (productPageCount && currentProductPage > productPageCount) {
+    currentProductPage = productPageCount;
+    return load();
+  }
   populateProductFilters();
   renderProducts();
 }
@@ -422,8 +506,9 @@ function populateProductFilters() {
   ]) {
     const select = $(id);
     const previousValue = select.value;
-    const values = [...new Set(allProducts.map(product => product[field]).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'vi'));
+    const values = id === 'productCategoryFilter'
+      ? productFilters.categories
+      : productFilters.audiences;
     select.replaceChildren(new Option(emptyLabel, ''));
     values.forEach(value => select.add(new Option(value, value)));
     if (values.includes(previousValue)) select.value = previousValue;
@@ -431,25 +516,21 @@ function populateProductFilters() {
 }
 
 function filteredProducts() {
-  const query = $('productSearch').value.trim().toLocaleLowerCase('vi');
-  const category = $('productCategoryFilter').value;
-  const audience = $('productAudienceFilter').value;
-  return allProducts.filter(product =>
-    (!query || String(product.name || '').toLocaleLowerCase('vi').includes(query)) &&
-    (!category || product.category === category) &&
-    (!audience || product.audience === audience)
-  );
+  return allProducts;
 }
 
 function renderProducts() {
   const rows = $('rows');
+  if (productImageObserver) {
+    rows.querySelectorAll('img[data-product-id]').forEach(img => productImageObserver.unobserve(img));
+  }
   rows.replaceChildren();
+  for (const url of productImageUrls) URL.revokeObjectURL(url);
+  productImageUrls.clear();
   const products = filteredProducts();
-  const pageCount = Math.max(1, Math.ceil(products.length / ADMIN_PAGE_SIZE));
-  currentProductPage = Math.min(currentProductPage, pageCount);
-  const start = (currentProductPage - 1) * ADMIN_PAGE_SIZE;
-  const visibleProducts = products.slice(start, start + ADMIN_PAGE_SIZE);
-  $('productCountSummary').textContent = `${products.length} sản phẩm · ${allProducts.length} tổng cộng`;
+  const pageCount = Math.max(1, productPageCount);
+  const visibleProducts = products;
+  $('productCountSummary').textContent = `${productTotal} sản phẩm · ${productCatalogTotal} tổng cộng`;
   $('productsPageLabel').textContent = `Trang ${currentProductPage} / ${pageCount}`;
   $('productsPrev').disabled = currentProductPage <= 1;
   $('productsNext').disabled = currentProductPage >= pageCount;
@@ -469,8 +550,12 @@ function renderProducts() {
     const tr = document.createElement('tr');
     const im = document.createElement('img');
 
-    im.src = p.image;
+    im.alt = 'Ảnh ' + p.name;
     im.className = 'thumb';
+    im.loading = 'lazy';
+    im.dataset.productId = p.id;
+    if (productImageObserver) productImageObserver.observe(im);
+    else void loadProductThumbnail(im, p.id);
 
     const td0 = document.createElement('td');
     td0.append(im);
@@ -495,11 +580,34 @@ function renderProducts() {
     edit.className = 'btn btn-sm btn-outline-dark mb-1';
     edit.textContent = 'Sửa';
 
-    edit.onclick = () => {
+    edit.onclick = async () => {
       $('id').value = p.id;
       $('name').value = p.name;
       $('price').value = p.price;
-      $('category').value = p.category;
+      const savedCategory = String(p.category || '');
+      const sportCategory = /^thể thao\s*-\s*/i.test(savedCategory);
+      const legacyCategory = /^(chạy bộ|lifestyle|giá tốt|training|originals)$/i.test(savedCategory);
+      const savedSubcategory = sportCategory
+        ? savedCategory.replace(/^thể thao\s*-\s*/i, '').trim()
+        : savedCategory;
+      const mappedSubcategory = legacyCategory
+        ? inferProductSubcategory(p.name)
+        : savedSubcategory;
+      $('productMainCategory').value = sportCategory || legacyCategory ? 'sports' : 'regular';
+      const hasSubcategory = [...$('category').options]
+        .some(option => option.value === mappedSubcategory);
+      $('category').value = hasSubcategory ? mappedSubcategory : '';
+      const notice = $('legacyCategoryNotice');
+      if (legacyCategory) {
+        notice.hidden = false;
+        notice.textContent = `Sản phẩm đang thuộc danh mục cũ “${savedCategory}”. Hệ thống gợi ý “Thể thao - ${mappedSubcategory || 'chưa xác định'}” từ tên sản phẩm; hãy kiểm tra danh mục con trước khi lưu. Dữ liệu chỉ đổi khi bạn chủ động lưu.`;
+      } else if (!hasSubcategory) {
+        notice.hidden = false;
+        notice.textContent = `Danh mục hiện tại “${savedCategory}” không thuộc 5 danh mục con mới. Chọn danh mục phù hợp trước khi lưu; dữ liệu chưa bị thay đổi.`;
+      } else {
+        notice.hidden = true;
+        notice.textContent = '';
+      }
       $('audience').value = p.audience;
       $('desc').value = p.description || '';
 
@@ -507,14 +615,29 @@ function renderProducts() {
         .map(([k, v]) => k + ':' + v)
         .join(', ');
 
-      image = p.image;
-      $('preview').src = image;
-      $('imageHelp').textContent = 'Đang dùng ảnh hiện tại';
-
       $('formTitle').textContent = 'Sửa sản phẩm';
       $('save').textContent = 'CẬP NHẬT';
-
       window.scrollTo(0, 0);
+      image = '';
+      $('preview').removeAttribute('src');
+      $('save').disabled = true;
+      $('reset').disabled = true;
+      document.querySelectorAll('#rows button').forEach(button => { button.disabled = true; });
+      $('imageHelp').textContent = 'Đang tải ảnh hiện tại…';
+      try {
+        const blob = await fetchProductImage(p.id);
+        const currentImage = await blobToDataUrl(blob);
+        if ($('id').value !== String(p.id)) return;
+        image = currentImage;
+        $('preview').src = currentImage;
+        $('imageHelp').textContent = 'Đang dùng ảnh hiện tại';
+      } catch (error) {
+        if ($('id').value === String(p.id)) msg(error.message, 'danger');
+      } finally {
+        $('save').disabled = false;
+        $('reset').disabled = false;
+        document.querySelectorAll('#rows button').forEach(button => { button.disabled = false; });
+      }
     };
 
     del.className = 'btn btn-sm ' + (p.active ? 'btn-outline-danger' : 'btn-outline-success');
@@ -544,11 +667,29 @@ function renderProducts() {
   }
 }
 
-$('productSearch').addEventListener('input', () => { currentProductPage = 1; renderProducts(); });
-$('productCategoryFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
-$('productAudienceFilter').addEventListener('change', () => { currentProductPage = 1; renderProducts(); });
-$('productsPrev').onclick = () => { currentProductPage -= 1; renderProducts(); };
-$('productsNext').onclick = () => { currentProductPage += 1; renderProducts(); };
+$('productSearch').addEventListener('input', () => {
+  currentProductPage = 1;
+  window.clearTimeout(productSearchTimer);
+  productSearchTimer = window.setTimeout(() => {
+    load().catch(error => msg(error.message, 'danger'));
+  }, 250);
+});
+$('productCategoryFilter').addEventListener('change', () => {
+  currentProductPage = 1;
+  load().catch(error => msg(error.message, 'danger'));
+});
+$('productAudienceFilter').addEventListener('change', () => {
+  currentProductPage = 1;
+  load().catch(error => msg(error.message, 'danger'));
+});
+$('productsPrev').onclick = () => {
+  currentProductPage -= 1;
+  load().catch(error => msg(error.message, 'danger'));
+};
+$('productsNext').onclick = () => {
+  currentProductPage += 1;
+  load().catch(error => msg(error.message, 'danger'));
+};
 
 async function loadOrders() {
   const body = $('orderRows');
