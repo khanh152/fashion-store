@@ -515,9 +515,21 @@ function populateProductFilters() {
   ]) {
     const select = $(id);
     const previousValue = select.value;
-    const values = id === 'productCategoryFilter'
+    let values = id === 'productCategoryFilter'
       ? productFilters.categories
       : productFilters.audiences;
+    if (id === 'productAudienceFilter') {
+      const standardAudiences = ['Nam', 'Nữ', 'Trẻ em', 'Thể thao'];
+      const standardValues = new Set(
+        standardAudiences.map(value => value.toLocaleLowerCase('vi'))
+      );
+      values = [
+        ...standardAudiences,
+        ...values.filter(value =>
+          !standardValues.has(String(value).trim().toLocaleLowerCase('vi'))
+        )
+      ];
+    }
     select.replaceChildren(new Option(emptyLabel, ''));
     values.forEach(value => select.add(new Option(value, value)));
     if (values.includes(previousValue)) select.value = previousValue;
