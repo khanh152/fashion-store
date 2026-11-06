@@ -540,16 +540,7 @@
       let productLoadError = false;
       let productApiAvailable = false;
       const cartProductIssues = new Map();
-      let products = [
-        {id:'samba-og',title:'Giày Samba OG Unisex',category:'Originals',audience:'Nam Nữ',price:2400000,oldPrice:2800000,badge:'BÁN CHẠY',image:'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=900&q=85',description:'Thiết kế kinh điển lấy cảm hứng từ sân bóng, phù hợp phối đồ hằng ngày.'},
-        {id:'superstar',title:'Giày Superstar Mũi Vỏ Sò',category:'Originals',audience:'Nam Nữ',price:2600000,oldPrice:null,badge:'ICONIC',image:'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=900&q=85',description:'Phong cách tối giản với chi tiết mũi vỏ sò đặc trưng, dễ phối nhiều trang phục.'},
-        {id:'ultraboost',title:'Giày Chạy Bộ Ultraboost Light',category:'Chạy bộ',audience:'Nam',price:4500000,oldPrice:5200000,badge:'HIỆU NĂNG',image:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85',description:'Phong cách thể thao năng động dành cho chạy bộ và các hoạt động hằng ngày.'},
-        {id:'forum-low',title:'Giày Forum Low Classic',category:'Lifestyle',audience:'Nam',price:2800000,oldPrice:null,badge:'MỚI',image:'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=900&q=85',description:'Phom dáng cổ điển, điểm nhấn gọn gàng cho phong cách đường phố.'},
-        {id:'running-white',title:'Giày Running Cloud White',category:'Chạy bộ',audience:'Nữ',price:1890000,oldPrice:2290000,badge:'GIÁ TỐT',image:'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=85',description:'Thiết kế nhẹ nhàng, màu sáng dễ kết hợp với trang phục thể thao.'},
-        {id:'street-black',title:'Giày Street Court Black',category:'Lifestyle',audience:'Nam',price:2190000,oldPrice:null,badge:'ĐƯỢC YÊU THÍCH',image:'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&q=85',description:'Đôi giày phong cách đường phố linh hoạt cho lịch trình mỗi ngày.'},
-        {id:'training',title:'Giày Training Flex',category:'Chạy bộ',audience:'Nữ',price:1690000,oldPrice:1990000,badge:'GIÁ TỐT',image:'https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=900&q=85',description:'Lựa chọn năng động cho buổi tập và hoạt động thường nhật.'},
-        {id:'classic-white',title:'Giày Classic White Edition',category:'Originals',audience:'Nam Nữ',price:1990000,oldPrice:null,badge:'CƠ BẢN',image:'https://images.unsplash.com/photo-1495555961986-6d4c1ecb7be3?auto=format&fit=crop&w=900&q=85',description:'Tông trắng tinh giản, phù hợp nhiều phong cách và hoàn cảnh.'}
-      ];
+      let products = [];
       let cart = loadJson(CART_KEY, []);
       const savedWishlist = loadJson(WISHLIST_KEY, []);
       let wishlist = new Set(Array.isArray(savedWishlist) ? savedWishlist.map(String) : []);
@@ -726,18 +717,28 @@
           ? (audienceKey === 'all' ? 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m' : 'T\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m ' + audienceName)
           : (audienceKey === 'all' ? '' : audienceName + ' \u00b7 ') + 'Danh m\u1ee5c: ' + selectedName;
         if (!list.length) {
-          renderProductPagination(0);
-          const emptyMessage = productLoadError
-            ? 'Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch s\u1ea3n ph\u1ea9m t\u1eeb m\u00e1y ch\u1ee7.'
-            : activeCategory === 'all'
-              ? 'Ch\u01b0a c\u00f3 s\u1ea3n ph\u1ea9m trong nh\u00f3m n\u00e0y.'
-              : 'Ch\u01b0a c\u00f3 s\u1ea3n ph\u1ea9m ' + selectedName + '.';
-          const emptyHint = productLoadError
-            ? '<p>Vui l\u00f2ng th\u1eed t\u1ea3i l\u1ea1i.</p><button class="btn btn-dark rounded-0" onclick="loadLiveProducts()">TH\u1eec T\u1ea2I L\u1ea0I</button>'
-            : '<p>H\u00e3y th\u1eed danh m\u1ee5c kh\u00e1c ho\u1eb7c x\u00f3a b\u1ed9 l\u1ecdc.</p><button class="btn btn-dark rounded-0" onclick="clearFilters()">XEM T\u1ea4T C\u1ea2</button>';
-          grid.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass fs-2 mb-3"></i><h5 class="fw-bold">' + emptyMessage + '</h5>' + emptyHint + '</div>';
-          return;
-        }
+  renderProductPagination(0);
+
+  // Hiển thị trạng thái chờ API trả dữ liệu
+  if (!productApiAvailable && !productLoadError) {
+    grid.innerHTML = '<div class="empty-state py-5" role="status" aria-live="polite"><div class="spinner-border text-dark mb-3" role="status"><span class="visually-hidden">Đang tải</span></div><h5 class="fw-bold">ĐANG TẢI SẢN PHẨM</h5><p>Vui lòng chờ trong giây lát...</p></div>';
+    document.getElementById('productCount').textContent = 'Đang tải...';
+    return;
+  }
+
+  const emptyMessage = productLoadError
+    ? 'Không thể tải danh sách sản phẩm từ máy chủ.'
+    : activeCategory === 'all'
+      ? 'Chưa có sản phẩm trong nhóm này.'
+      : 'Chưa có sản phẩm ' + selectedName + '.';
+
+  const emptyHint = productLoadError
+    ? '<p>Vui lòng thử tải lại.</p><button class="btn btn-dark rounded-0" onclick="loadLiveProducts()">THỬ TẢI LẠI</button>'
+    : '<p>Hãy thử danh mục khác hoặc xóa bộ lọc.</p><button class="btn btn-dark rounded-0" onclick="clearFilters()">XEM TẤT CẢ</button>';
+
+  grid.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass fs-2 mb-3"></i><h5 class="fw-bold">' + emptyMessage + '</h5>' + emptyHint + '</div>';
+  return;
+}
         grid.innerHTML = pageProducts.map(p =>
           '<div class="col product-item"><article class="adidas-card h-100">' +
             '<div class="img-wrapper" role="button" tabindex="0" aria-label="Xem ' + escapeHtml(p.title) + '" onclick="openProduct(\'' + p.id + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openProduct(\'' + p.id + '\');}">' +
